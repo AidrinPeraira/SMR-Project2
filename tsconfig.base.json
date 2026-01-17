@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    // main settings
+    "target": "ES2022", //commonly used node version
+    "module": "NodeNext", //latest
+    "moduleResolution": "NodeNext", //latest
+
+    //optional features
+    "esModuleInterop": true, //allow import in commonjs require
+    "skipLibCheck": true, //skip type check for node_modules
+    "resolveJsonModule": true, //allow importing json to ts file
+    "strict": true, //striict type checking
+    "moduleDetection": "force", //added module import surity
+
+    "allowJs": true, //allow importing .js files and not just .ts files
+    "isolatedModules": true, //for fast compiling. setting for ensuring each file can compile in its own.
+
+    "noUncheckedIndexedAccess": true, //inhernetly adds undefined type for elements that have the potential to be undefined. (Eg: 5th index of an array of size 3 having type string will be undefined right?)
+    "noImplicitAny": true, //more strict settings. reduce automatic any type
+
+    "noEmit": true, //since this is a config file at parent level. don't do anyhinng with this file just allow it to be inherited by the tsconfig files in the services
+
+    "lib": ["es2022"], //broeser js version. what methods of what js is available?
+    "forceConsistentCasingInFileNames": true //recomended by ide
+  },
+  "include": ["src", "vitest.config.ts"]
+}

@@ -5,9 +5,7 @@ import LandingNavbar from "@/components/landing-page/LandingNavbar";
 import TestimonialsSection from "@/components/landing-page/TestimonialsSection";
 import { WhySection } from "@/components/landing-page/WhySection";
 
-type Props = {};
-
-function LandingPage({}: Props) {
+function LandingPage() {
   return (
     <>
       <LandingNavbar />

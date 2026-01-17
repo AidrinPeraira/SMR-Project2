@@ -29,8 +29,6 @@ const navItems = [
 ];
 
 function LandingNavbar() {
-  const staggerDelay = 0.05;
-
   return (
     <>
       <div className=" left-0 z-50  border-border sticky">
@@ -52,7 +50,7 @@ function LandingNavbar() {
 
           {/* this is the nav bar for bigger screens (Centered Links) */}
           <div className="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 gap-6 items-center">
-            {navItems.map((item, i) => (
+            {navItems.map((item) => (
               <a key={item.name} href={`#${item.name.toLowerCase()}`}>
                 {item.name}
               </a>

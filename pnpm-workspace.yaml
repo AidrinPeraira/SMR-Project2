@@ -1,0 +1,4 @@
+packages:
+  - "smr-backend/*"
+  - "smr-frontend"
+  - "smr-shared-library"

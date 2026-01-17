@@ -1,0 +1,24 @@
+# this tis the file that sets cogif for promethus to scrape data.
+
+global:
+  scrape_interval: 600s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    static_configs:
+      # Use the docker-compose service name and port
+      - targets: ["api-gateway:4000"]
+
+  - job_name: "auth-service"
+    static_configs:
+      - targets: ["auth-service:4001"]
+
+  # We can also scrape prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "frontend"
+    metrics_path: /api/metrics
+    static_configs:
+      - targets: ["frontend-nextjs:3000"]
