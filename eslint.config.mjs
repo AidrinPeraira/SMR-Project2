@@ -12,7 +12,7 @@ export default defineConfig(
       "@typescript-eslint/require-await": "off",
       "@typescript-eslint/no-misused-promises": [
         "error",
-        { checksVoidReturn: false }
+        { checksVoidReturn: false },
       ],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
@@ -23,7 +23,7 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,  // Enable type-aware linting
+        projectService: true, // Enable type-aware linting
       },
     },
   },
@@ -33,22 +33,9 @@ export default defineConfig(
       "**/node_modules",
       "**/dist/**",
       "**/build/**",
-      "frontend/**",
+      "smr-frontend/**",
       "**/tests/**",
+      "**/application.config.ts",
     ],
-  },
-
-  {
-    files: ["**/app.config.ts"],
-    rules: {
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
-    },
-  },
-
-  {
-    files: ["**/DataRegexEnums.ts"],
-    rules: {
-      "no-useless-escape": "off",
-    },
   },
 );

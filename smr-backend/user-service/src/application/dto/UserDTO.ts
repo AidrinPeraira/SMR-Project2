@@ -1,5 +1,3 @@
-import { UserRoles } from "@smr/shared";
-
 export interface RegisterUserRequestDTO {
   firstName: string;
   lastName: string;

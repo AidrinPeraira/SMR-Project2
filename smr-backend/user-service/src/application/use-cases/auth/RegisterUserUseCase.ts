@@ -15,7 +15,6 @@ import {
   AppError,
   AppErrorCode,
   AppMessages,
-  DomainEvent,
   EventName,
   HttpStatus,
   OTPType,
@@ -50,7 +49,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
   async execute(input: RegisterUserRequestDTO): Promise<RegisterUserResultDTO> {
     const { firstName, lastName, email, phoneNumber, password } = input;
 
-    let existingUser = await this._userRepository.findByEmail(email);
+    const existingUser = await this._userRepository.findByEmail(email);
 
     //if user is registered and already verified
     if (existingUser && existingUser.emailVerified) {
@@ -120,6 +119,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
         user_id: newUser.userId,
         email_id: email,
         otp,
+        otp_type: OTPType.REGISTER,
         expires_in: AppConfig.OTP_EXPIRY_SECONDS,
       },
       timestamp: Date.now(),
