@@ -12,7 +12,9 @@
   "packageManager": "pnpm@10.22.0",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@types/amqplib": "^0.10.8",
     "@types/eslint": "^9.6.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.30",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
