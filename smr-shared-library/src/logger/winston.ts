@@ -41,6 +41,10 @@ class WinstonLogger implements ILogger {
   debug(msg: string, meta?: any) {
     this.logger.debug(msg, meta);
   }
+
+  http(msg: string, meta?: any) {
+    this.logger.http(msg, meta);
+  }
 }
 
 export const logger = new WinstonLogger();
