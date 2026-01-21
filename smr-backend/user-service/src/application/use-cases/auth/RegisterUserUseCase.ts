@@ -1,13 +1,9 @@
-import { AppConfig } from "@/application.config.js";
 import {
   RegisterUserRequestDTO,
   RegisterUserResultDTO,
 } from "@/application/dto/UserDTO.js";
-import { IOTPRepository } from "@/application/interfaces/repository/IOTPRepository.js";
 import { IUserRepository } from "@/application/interfaces/repository/IUserRepository.js";
 import { ICounterService } from "@/application/interfaces/service/ICounterService.js";
-import { IEventBus } from "@/application/interfaces/service/IEventBus.js";
-import { IOTPGenerator } from "@/application/interfaces/service/IOTPGenerator.js";
 import { IPasswordHasher } from "@/application/interfaces/service/IPasswordHasher.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/IRegisterUserUseCase.js";
 import {
@@ -15,10 +11,7 @@ import {
   AppError,
   AppErrorCode,
   AppMessages,
-  EventName,
   HttpStatus,
-  OTPType,
-  SendEmailOTPEvent,
   UserRoles,
 } from "@smr/shared";
 
@@ -27,9 +20,6 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
     private readonly _userRepository: IUserRepository,
     private readonly _passwordHasher: IPasswordHasher,
     private readonly _counterService: ICounterService,
-    private readonly _otpRepository: IOTPRepository,
-    private readonly _otpGenerator: IOTPGenerator,
-    private readonly _eventBus: IEventBus,
   ) {}
 
   /**
@@ -101,31 +91,6 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
       });
     }
 
-    //generate otp and publish event for the notification service to send an email
-    const otp = this._otpGenerator.generate(AppConfig.OTP_LENGTH);
-
-    await this._otpRepository.saveOtp({
-      email,
-      otp,
-      type: OTPType.REGISTER,
-      attempts: 0,
-      created_at: now,
-      expires_at: new Date(now.getTime() + 60 * 1000),
-    });
-
-    const event: SendEmailOTPEvent = {
-      event: EventName.SEND_EMAIL_OTP,
-      data: {
-        user_id: newUser.userId,
-        email_id: email,
-        otp,
-        otp_type: OTPType.REGISTER,
-        expires_in: AppConfig.OTP_EXPIRY_SECONDS,
-      },
-      timestamp: Date.now(),
-    };
-
-    await this._eventBus.publish(event);
     return newUser;
   }
 }

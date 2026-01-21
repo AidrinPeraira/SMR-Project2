@@ -7,4 +7,5 @@ export enum AppMessages {
   INTERNAL_ERROR = "An unexpected error occurred.",
   VALIDATION_FAILED = "Input validation failed.",
   USER_ALREADY_EXISTS = "A user with given credentials already exists. Please login to continue.",
+  UNPROCESSABLE_ENTITY = "The data recieved is insufficient for this action.",
 }
