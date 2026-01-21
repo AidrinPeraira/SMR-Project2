@@ -1,0 +1,42 @@
+//we use this file to pass all the dependencies for dependency injection.
+//this reduces code in index.js
+
+import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
+import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCase.js";
+import { CounterModel } from "@/infrastructure/database/models/MongoCounterModel.js";
+import { OtpModel } from "@/infrastructure/database/models/MongoOtpModel.js";
+import { UserModel } from "@/infrastructure/database/models/MongoUserModel.js";
+import { MongoOtpRepository } from "@/infrastructure/repository/MongoOtpRepository.js";
+import { MongoUserRepository } from "@/infrastructure/repository/MongoUserRepository.js";
+import { MongoCounterService } from "@/infrastructure/services/CounterService.js";
+import { OtpGenerator } from "@/infrastructure/services/OtpGenerator.js";
+import { BcryptPasswordHasher } from "@/infrastructure/services/PasswordHasher.js";
+import { AuthController } from "@/presentation/controllers/AuthController.js";
+import { eventBus } from "@/presentation/factories/EventBusFactory.js";
+
+// ------------ repositories ------------------
+const userRepository = new MongoUserRepository(UserModel);
+const otpRepository = new MongoOtpRepository(OtpModel);
+const counterService = new MongoCounterService(CounterModel);
+
+// ------------ services ------------------
+const passwordHasher = new BcryptPasswordHasher();
+const otpGenerator = new OtpGenerator();
+
+// ------------ use cases ------------------
+const registerUserUseCase = new RegisterUserUseCase(
+  userRepository,
+  passwordHasher,
+  counterService,
+);
+const sendEmailOTPUseCase = new SendOTPMailUseCase(
+  otpRepository,
+  otpGenerator,
+  eventBus,
+);
+
+// ------------ controller ------------------
+export const authController = new AuthController(
+  registerUserUseCase,
+  sendEmailOTPUseCase,
+);

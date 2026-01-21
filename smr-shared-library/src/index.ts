@@ -7,3 +7,4 @@ export * from "./events";
 export * from "./schema";
 export * from "./utils";
 export * from "./responses";
+export * from "./dto";

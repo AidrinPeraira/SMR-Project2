@@ -1,5 +1,12 @@
-import { RegisterUserRequestDTO } from "@/application/dto/UserDTO.js";
-import { RegisterUserSchema, safeParseOrThrow } from "@smr/shared";
+import {
+  RegisterUserRequestDTO,
+  RegisterUserResultDTO,
+} from "@/application/dto/UserDTO.js";
+import {
+  RegisterResponseDto,
+  RegisterUserSchema,
+  safeParseOrThrow,
+} from "@smr/shared";
 import { Request } from "express";
 
 /**
@@ -21,5 +28,24 @@ export function toRegisterRequestDto(req: Request): RegisterUserRequestDTO {
     email: validated.email_id,
     phoneNumber: validated.phone_number,
     password: validated.password,
+  };
+}
+
+/**
+ * This funciton takes the data from the use case,
+ * converts it into the shape needed for the frontend
+ *
+ * @param newUser the data to be sent to frontend after reg
+ * @returns data in frontend shape
+ */
+export function toRegisterResponseDto(
+  newUser: RegisterUserResultDTO,
+): RegisterResponseDto {
+  return {
+    user_id: newUser.userId,
+    first_name: newUser.firstName,
+    last_name: newUser.lastName,
+    email_id: newUser.email,
+    email_verified: newUser.emailVerified,
   };
 }

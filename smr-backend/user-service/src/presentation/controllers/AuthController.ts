@@ -1,7 +1,10 @@
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/IRegisterUserUseCase.js";
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
 import { IAuthController } from "@/presentation/interfaces/IAuthController.js";
-import { toRegisterRequestDto } from "@/presentation/mapper/AuthMapper.js";
+import {
+  toRegisterRequestDto,
+  toRegisterResponseDto,
+} from "@/presentation/mapper/AuthMapper.js";
 import {
   AppMessages,
   HttpStatus,
@@ -35,7 +38,7 @@ export class AuthController implements IAuthController {
 
     logger.info(`Register attempt: ${userData.email}`);
 
-    let newUser = await this._registerUser.execute({
+    const newUser = await this._registerUser.execute({
       firstName: userData.firstName,
       lastName: userData.lastName,
       email: userData.email,
@@ -58,7 +61,12 @@ export class AuthController implements IAuthController {
 
     res
       .status(HttpStatus.CREATED)
-      .json(makeSuccessResponse(AppMessages.SUCCESS, newUser));
+      .json(
+        makeSuccessResponse(
+          AppMessages.SUCCESS,
+          toRegisterResponseDto(newUser),
+        ),
+      );
 
     return;
   }
