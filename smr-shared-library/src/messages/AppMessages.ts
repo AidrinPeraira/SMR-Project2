@@ -15,6 +15,7 @@ export enum AuthMessages {
   USER_NOT_FOUND = "User not registered with this email. Signup to continue.",
   INVALID_CREDENTIALS = "The email or password provided is incorrect.",
   LOGOUT_SUCCESS = "You have been successfully logged out.",
+  LOGIN_SUCCESS = "You have been successfully logged in.",
 
   TOKEN_EXPIRED = "Your session has expired. Please log in again.",
   TOKEN_INVALID = "The security token provided is invalid.",

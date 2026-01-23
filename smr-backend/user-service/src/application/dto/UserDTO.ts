@@ -1,3 +1,5 @@
+import { UserRoles } from "@smr/shared";
+
 export interface RegisterUserRequestDTO {
   firstName: string;
   lastName: string;
@@ -26,6 +28,7 @@ export interface LoginUserResult {
     firstName: string;
     lastName: string;
     profileImage: string;
+    role: UserRoles;
   };
   accessToken: string;
   refreshToken: string;

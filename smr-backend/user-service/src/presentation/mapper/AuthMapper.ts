@@ -1,8 +1,12 @@
 import {
+  LoginUserRequestDTO,
+  LoginUserResult,
   RegisterUserRequestDTO,
   RegisterUserResultDTO,
 } from "@/application/dto/UserDTO.js";
 import {
+  LoginResponseDTO,
+  LoginUserSchema,
   RegisterResponseDto,
   RegisterUserSchema,
   safeParseOrThrow,
@@ -11,10 +15,10 @@ import { Request } from "express";
 
 /**
  *
- * This function takes the request
- * parses and asserts the type of the user data in the request body
- * using zod schema shared in shared lib
- * maps the data to the UserEntity shape
+ * This funciton takes the req object
+ * and parses user data in body to
+ * validate, using zod schema from shared lib,
+ * and convert shape to domain shape.
  *
  * @param req req body form controller
  * @returns UserEntity without id. Domain style
@@ -47,5 +51,46 @@ export function toRegisterResponseDto(
     last_name: newUser.lastName,
     email_id: newUser.email,
     email_verified: newUser.emailVerified,
+  };
+}
+
+/**
+ *
+ * This funciton takes the req object
+ * and parses user data in body to
+ * validate, using zod schema from shared lib,
+ * and convert shape to domain shape.
+ *
+ * @param req req body form controller
+ * @returns UserEntity without id. Domain style
+ */
+export function toLoginRequestDto(req: Request): LoginUserRequestDTO {
+  const validated = safeParseOrThrow(LoginUserSchema, req.body);
+
+  return {
+    email: validated.email_id,
+    password: validated.password,
+  };
+}
+
+/**
+ * This funciton takes the data from the use case,
+ * converts it into the shape needed for the frontend
+ *
+ * @param newUser the data to be sent to frontend after reg
+ * @returns data in frontend shape
+ */
+export function toLoginResponseDto(data: LoginUserResult): LoginResponseDTO {
+  return {
+    user: {
+      user_id: data.user.userId,
+      email_id: data.user.email,
+      first_name: data.user.firstName,
+      last_name: data.user.lastName,
+      profile_image: data.user.profileImage,
+      user_role: data.user.role,
+    },
+    access_token: data.accessToken,
+    refresh_token: data.refreshToken,
   };
 }

@@ -99,6 +99,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         firstName: user.firstName,
         lastName: user.lastName,
         profileImage: user.profileImage ?? "",
+        role: user.role,
       },
       accessToken,
       refreshToken,
