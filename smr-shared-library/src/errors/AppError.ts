@@ -1,5 +1,4 @@
 import { AppErrorCode, HttpStatus } from "enums";
-import { AppMessages } from "messages";
 
 export class AppError extends Error {
   public readonly code: AppErrorCode;
@@ -15,7 +14,7 @@ export class AppError extends Error {
    */
   constructor(
     code: AppErrorCode,
-    message: AppMessages,
+    message: string,
     httpStatus: HttpStatus,
     details?: any,
   ) {

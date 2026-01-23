@@ -5,6 +5,7 @@ import {
   toRegisterRequestDto,
   toRegisterResponseDto,
 } from "@/presentation/mapper/AuthMapper.js";
+import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
   AppMessages,
   HttpStatus,
@@ -34,40 +35,44 @@ export class AuthController implements IAuthController {
    * @returns
    */
   async register(req: Request, res: Response): Promise<void> {
-    const userData = toRegisterRequestDto(req);
+    try {
+      const userData = toRegisterRequestDto(req);
 
-    logger.info(`Register attempt: ${userData.email}`);
+      logger.info(`Register attempt: ${userData.email}`);
 
-    const newUser = await this._registerUser.execute({
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      phoneNumber: userData.phoneNumber,
-      password: userData.password,
-    });
+      const newUser = await this._registerUser.execute({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phoneNumber: userData.phoneNumber,
+        password: userData.password,
+      });
 
-    logger.info(
-      `Register attempt: ${userData.email}. Verifying Email with OTP.`,
-    );
-
-    const data: Partial<SendEmailOTPData> = {
-      user_id: newUser.userId,
-      email_id: newUser.email,
-      user_name: newUser.firstName + " " + newUser.lastName,
-      otp_type: OTPType.REGISTER,
-    };
-
-    await this._sendOTPMailUseCase.execute(data);
-
-    res
-      .status(HttpStatus.CREATED)
-      .json(
-        makeSuccessResponse(
-          AppMessages.SUCCESS,
-          toRegisterResponseDto(newUser),
-        ),
+      logger.info(
+        `Register attempt: ${userData.email}. Verifying Email with OTP.`,
       );
 
-    return;
+      const data: Partial<SendEmailOTPData> = {
+        user_id: newUser.userId,
+        email_id: newUser.email,
+        user_name: newUser.firstName + " " + newUser.lastName,
+        otp_type: OTPType.REGISTER,
+      };
+
+      await this._sendOTPMailUseCase.execute(data);
+
+      res
+        .status(HttpStatus.CREATED)
+        .json(
+          makeSuccessResponse(
+            AppMessages.SUCCESS,
+            toRegisterResponseDto(newUser),
+          ),
+        );
+
+      return;
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Register Controller");
+    }
   }
 }

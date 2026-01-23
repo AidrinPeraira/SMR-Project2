@@ -7,3 +7,15 @@ export interface RegisterResponseDto {
   email_id: string;
   email_verified: boolean;
 }
+
+export interface LoginResponseDTO {
+  user: {
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profileImage: string;
+  };
+  accessToken: string;
+  refreshToken: string;
+}

@@ -10,7 +10,7 @@ import {
   AccountStatus,
   AppError,
   AppErrorCode,
-  AppMessages,
+  AuthMessages,
   HttpStatus,
   UserRoles,
 } from "@smr/shared";
@@ -45,7 +45,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
     if (existingUser && existingUser.emailVerified) {
       throw new AppError(
         AppErrorCode.EMAIL_ALREADY_EXISTS,
-        AppMessages.USER_ALREADY_EXISTS,
+        AuthMessages.USER_ALREADY_EXISTS,
         HttpStatus.CONFLICT,
       );
     }

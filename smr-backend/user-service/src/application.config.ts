@@ -13,6 +13,9 @@ export const AppConfig = {
   REFRESH_TOKEN_SECRET:
     String(process.env.REFRESH_TOKEN_SECRET) || "your-refresh-secret",
 
+  ACCESS_TOKEN_LIFE: Number(process.env.ACCESS_TOKEN_LIFE) || 900,
+  REFRESH_TOKEN_LIFE: Number(process.env.REFRESH_TOKEN_LIFE) || 172800,
+
   RABBITMQ_URL:
     String(process.env.RABBITMQ_URL) || "amqp://guest:guest@rabbit-mq:5672",
   EXCHANGE_NAME: String(process.env.EXCHANGE_NAME) || "sharemyride.events",
