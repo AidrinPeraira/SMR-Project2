@@ -3,7 +3,7 @@ import { ITokenService } from "@/application/interfaces/service/ITokenService.js
 import {
   AppError,
   AppErrorCode,
-  AppMessages,
+  AuthMessages,
   HttpStatus,
   logger,
   TokenPayloadType,
@@ -34,7 +34,7 @@ export class JwtTokenService implements ITokenService {
       logger.error("Error verifying refresh token: ", error);
       throw new AppError(
         AppErrorCode.TOKEN_INVALID,
-        AppMessages.UNAUTHORIZED,
+        AuthMessages.UNAUTHORIZED,
         HttpStatus.UNAUTHORIZED,
       );
     }

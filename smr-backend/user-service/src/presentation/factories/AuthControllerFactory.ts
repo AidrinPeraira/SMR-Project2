@@ -1,14 +1,18 @@
 //we use this file to pass all the dependencies for dependency injection.
 //this reduces code in index.js
 
+import { LoginUserUseCase } from "@/application/use-cases/auth/LoginUserUseCase.js";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
+import { VerifyEmailAndLoginUseCase } from "@/application/use-cases/auth/VerifyEmailAndLoginUseCase.js";
 import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCase.js";
+import { VerifyEmailOTPUseCase } from "@/application/use-cases/otp/VerifyEmailOTPUseCase.js";
 import { CounterModel } from "@/infrastructure/database/models/MongoCounterModel.js";
 import { OtpModel } from "@/infrastructure/database/models/MongoOtpModel.js";
 import { UserModel } from "@/infrastructure/database/models/MongoUserModel.js";
 import { MongoOtpRepository } from "@/infrastructure/repository/MongoOtpRepository.js";
 import { MongoUserRepository } from "@/infrastructure/repository/MongoUserRepository.js";
 import { MongoCounterService } from "@/infrastructure/services/CounterService.js";
+import { JwtTokenService } from "@/infrastructure/services/JwtTokenService.js";
 import { OtpGenerator } from "@/infrastructure/services/OtpGenerator.js";
 import { BcryptPasswordHasher } from "@/infrastructure/services/PasswordHasher.js";
 import { AuthController } from "@/presentation/controllers/AuthController.js";
@@ -22,6 +26,7 @@ const counterService = new MongoCounterService(CounterModel);
 // ------------ services ------------------
 const passwordHasher = new BcryptPasswordHasher();
 const otpGenerator = new OtpGenerator();
+const tokenService = new JwtTokenService();
 
 // ------------ use cases ------------------
 const registerUserUseCase = new RegisterUserUseCase(
@@ -34,9 +39,22 @@ const sendEmailOTPUseCase = new SendOTPMailUseCase(
   otpGenerator,
   eventBus,
 );
+const loginUserUseCase = new LoginUserUseCase(
+  userRepository,
+  passwordHasher,
+  tokenService,
+);
+const verifyEmailOTPUseCase = new VerifyEmailOTPUseCase(otpRepository);
+const verifyEmailAndLoginUseCase = new VerifyEmailAndLoginUseCase(
+  userRepository,
+  tokenService,
+);
 
 // ------------ controller ------------------
 export const authController = new AuthController(
   registerUserUseCase,
   sendEmailOTPUseCase,
+  loginUserUseCase,
+  verifyEmailOTPUseCase,
+  verifyEmailAndLoginUseCase,
 );
