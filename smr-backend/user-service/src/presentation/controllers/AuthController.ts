@@ -75,7 +75,7 @@ export class AuthController implements IAuthController {
         .status(HttpStatus.CREATED)
         .json(
           makeSuccessResponse(
-            AppMessages.SUCCESS,
+            AuthMessages.USER_REGISTERED,
             toRegisterResponseDto(newUser),
           ),
         );

@@ -43,6 +43,19 @@ export class LoginUserUseCase implements ILoginUserUseCase {
       );
     }
 
+    const isMatch = await this._passwordHasher.compare(
+      password,
+      user.passwordHash,
+    );
+
+    if (!isMatch) {
+      throw new AppError(
+        AppErrorCode.BAD_REQUEST,
+        AuthMessages.INVALID_CREDENTIALS,
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     if (!user.emailVerified) {
       throw new AppError(
         AppErrorCode.FORBIDDEN,
@@ -55,19 +68,6 @@ export class LoginUserUseCase implements ILoginUserUseCase {
       throw new AppError(
         AppErrorCode.FORBIDDEN,
         AuthMessages.ACCOUNT_UNAVAILABLE,
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
-    const isMatch = await this._passwordHasher.compare(
-      password,
-      user.passwordHash,
-    );
-
-    if (!isMatch) {
-      throw new AppError(
-        AppErrorCode.BAD_REQUEST,
-        AuthMessages.EMAIL_VERIFICATION_REQUIRED,
         HttpStatus.FORBIDDEN,
       );
     }
