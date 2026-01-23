@@ -24,6 +24,10 @@ export function createAuthRouter(authController: IAuthController) {
     asyncHandler(authController.login.bind(authController)),
   );
 
+  router.post(
+    "/verify-and-register",
+    asyncHandler(authController.verifyRegisterOtp.bind(authController)),
+  );
   return router;
 }
 

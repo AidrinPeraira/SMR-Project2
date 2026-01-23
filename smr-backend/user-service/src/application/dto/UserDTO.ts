@@ -21,7 +21,7 @@ export interface LoginUserRequestDTO {
   password: string;
 }
 
-export interface LoginUserResult {
+export interface LoginUserResultDTO {
   user: {
     userId: string;
     email: string;

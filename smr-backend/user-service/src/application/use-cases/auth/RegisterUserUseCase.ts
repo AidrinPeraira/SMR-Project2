@@ -5,7 +5,7 @@ import {
 import { IUserRepository } from "@/application/interfaces/repository/IUserRepository.js";
 import { ICounterService } from "@/application/interfaces/service/ICounterService.js";
 import { IPasswordHasher } from "@/application/interfaces/service/IPasswordHasher.js";
-import { IRegisterUserUseCase } from "@/application/interfaces/use-case/IRegisterUserUseCase.js";
+import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
 import {
   AccountStatus,
   AppError,

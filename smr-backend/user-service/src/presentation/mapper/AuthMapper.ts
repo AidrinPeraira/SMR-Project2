@@ -1,6 +1,6 @@
 import {
   LoginUserRequestDTO,
-  LoginUserResult,
+  LoginUserResultDTO,
   RegisterUserRequestDTO,
   RegisterUserResultDTO,
 } from "@/application/dto/UserDTO.js";
@@ -80,7 +80,7 @@ export function toLoginRequestDto(req: Request): LoginUserRequestDTO {
  * @param newUser the data to be sent to frontend after reg
  * @returns data in frontend shape
  */
-export function toLoginResponseDto(data: LoginUserResult): LoginResponseDTO {
+export function toLoginResponseDto(data: LoginUserResultDTO): LoginResponseDTO {
   return {
     user: {
       user_id: data.user.userId,

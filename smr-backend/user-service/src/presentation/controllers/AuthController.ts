@@ -1,6 +1,8 @@
-import { ILoginUserUseCase } from "@/application/interfaces/use-case/ILoginUserUseCase.js";
-import { IRegisterUserUseCase } from "@/application/interfaces/use-case/IRegisterUserUseCase.js";
+import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
+import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
+import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
+import { IVerifyEmailOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyEmailOTPUseCase.js";
 import { IAuthController } from "@/presentation/interfaces/IAuthController.js";
 import {
   toLoginRequestDto,
@@ -8,6 +10,7 @@ import {
   toRegisterRequestDto,
   toRegisterResponseDto,
 } from "@/presentation/mapper/AuthMapper.js";
+import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
   AppMessages,
@@ -25,6 +28,8 @@ export class AuthController implements IAuthController {
     private readonly _registerUserUseCase: IRegisterUserUseCase,
     private readonly _sendOTPMailUseCase: ISendOTPEMailUseCase,
     private readonly _loginUserUseCase: ILoginUserUseCase,
+    private readonly _verifyEmailOTPUseCase: IVerifyEmailOTPUseCase,
+    private readonly _verifyEmailAndLogin: IVerifyEmailAndLoginUseCase,
   ) {}
 
   /**
@@ -101,6 +106,46 @@ export class AuthController implements IAuthController {
       return;
     } catch (error: unknown) {
       handleControllerError(res, error, "Login Controller");
+    }
+  }
+
+  /**
+   * This funciton calls the verify otp use case
+   * if the verify otp is for register
+   * logs in the user by sending back tokens
+   *
+   * @param req req with otp input from usern in body
+   * @param res verificaiton status
+   * @returns null
+   */
+  async verifyRegisterOtp(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, otp, type } = toVerifyOTPRequestDTO(req);
+
+      logger.info(`Verify email and login attempt: ${email}`);
+
+      const result = await this._verifyEmailOTPUseCase.execute({
+        email,
+        otp,
+        type,
+      });
+
+      const loggedInUser = await this._verifyEmailAndLogin.execute(
+        result.email,
+      );
+
+      res
+        .status(HttpStatus.CREATED)
+        .json(
+          makeSuccessResponse(
+            AuthMessages.LOGIN_SUCCESS,
+            toLoginResponseDto(loggedInUser),
+          ),
+        );
+
+      return;
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Verify EMail and Login Controller");
     }
   }
 }

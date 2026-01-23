@@ -30,4 +30,8 @@ export enum AuthMessages {
 
   ACCOUNT_LOCKED = "Your account has been locked due to multiple failed login attempts.",
   ACCOUNT_UNAVAILABLE = "This account has been suspended / deleted. Please contact support.",
+
+  OTP_INVALID = "The OTP provided is invalid.",
+  OTP_EXPIRED = "The OTP has expired.",
+  OTP_NOT_FOUND = "No OTP Found.",
 }

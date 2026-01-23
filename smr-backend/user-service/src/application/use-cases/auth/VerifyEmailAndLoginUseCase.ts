@@ -1,14 +1,9 @@
 import { AppConfig } from "@/application.config.js";
-import {
-  LoginUserRequestDTO,
-  LoginUserResultDTO,
-} from "@/application/dto/UserDTO.js";
+import { LoginUserResultDTO } from "@/application/dto/UserDTO.js";
 import { IUserRepository } from "@/application/interfaces/repository/IUserRepository.js";
-import { IPasswordHasher } from "@/application/interfaces/service/IPasswordHasher.js";
 import { ITokenService } from "@/application/interfaces/service/ITokenService.js";
-import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
+import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
 import {
-  AccountStatus,
   AppError,
   AppErrorCode,
   AuthMessages,
@@ -16,23 +11,18 @@ import {
   TokenType,
 } from "@smr/shared";
 
-export class LoginUserUseCase implements ILoginUserUseCase {
+export class VerifyEmailAndLoginUseCase implements IVerifyEmailAndLoginUseCase {
   constructor(
     private readonly _userRepository: IUserRepository,
-    private readonly _passwordHasher: IPasswordHasher,
     private readonly _tokenService: ITokenService,
   ) {}
 
   /**
-   * this funciton checks user in db
-   * compares paswrods
-   * if match returns token for login
-   *
-   * @param input email and password
+   * This function facilitates login after email has been verified.
+   * @param email email after successful otp verification
+   * @returns access and refresh tokens
    */
-  async execute(input: LoginUserRequestDTO): Promise<LoginUserResultDTO> {
-    const { email, password } = input;
-
+  async execute(email: string): Promise<LoginUserResultDTO> {
     const user = await this._userRepository.findByEmail(email);
 
     if (!user) {
@@ -44,32 +34,10 @@ export class LoginUserUseCase implements ILoginUserUseCase {
     }
 
     if (!user.emailVerified) {
-      throw new AppError(
-        AppErrorCode.FORBIDDEN,
-        AuthMessages.EMAIL_VERIFICATION_REQUIRED,
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
-    if (user.accountStatus !== AccountStatus.ACTIVE) {
-      throw new AppError(
-        AppErrorCode.FORBIDDEN,
-        AuthMessages.ACCOUNT_UNAVAILABLE,
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
-    const isMatch = await this._passwordHasher.compare(
-      password,
-      user.passwordHash,
-    );
-
-    if (!isMatch) {
-      throw new AppError(
-        AppErrorCode.BAD_REQUEST,
-        AuthMessages.EMAIL_VERIFICATION_REQUIRED,
-        HttpStatus.FORBIDDEN,
-      );
+      await this._userRepository.update(user.userId, {
+        emailVerified: true,
+        updatedAt: new Date(),
+      });
     }
 
     const now = Math.floor(Date.now() / 1000);
