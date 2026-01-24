@@ -4,6 +4,7 @@
 import { LoginUserUseCase } from "@/application/use-cases/auth/LoginUserUseCase.js";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
 import { VerifyEmailAndLoginUseCase } from "@/application/use-cases/auth/VerifyEmailAndLoginUseCase.js";
+import { ResendOtpUseCase } from "@/application/use-cases/otp/ResendOTPMailUseCase.js";
 import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCase.js";
 import { VerifyEmailOTPUseCase } from "@/application/use-cases/otp/VerifyEmailOTPUseCase.js";
 import { CounterModel } from "@/infrastructure/database/models/MongoCounterModel.js";
@@ -49,6 +50,12 @@ const verifyEmailAndLoginUseCase = new VerifyEmailAndLoginUseCase(
   userRepository,
   tokenService,
 );
+const resendEMailOTPUseCase = new ResendOtpUseCase(
+  otpRepository,
+  userRepository,
+  otpGenerator,
+  eventBus,
+);
 
 // ------------ controller ------------------
 export const authController = new AuthController(
@@ -57,4 +64,5 @@ export const authController = new AuthController(
   loginUserUseCase,
   verifyEmailOTPUseCase,
   verifyEmailAndLoginUseCase,
+  resendEMailOTPUseCase,
 );

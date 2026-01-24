@@ -6,6 +6,7 @@ export interface OtpDoc extends Document {
   otp: string;
   type: OTPType;
   attempts: number;
+  resends: number;
   expires_at: Date;
   created_at: Date;
 }
@@ -15,6 +16,7 @@ const OtpSchema = new Schema<OtpDoc>({
   otp: { type: String, required: true },
   type: { type: String, enum: Object.values(OTPType), required: true },
   attempts: { type: Number, required: true, default: 0 },
+  resends: { type: Number, required: true, default: 0 },
   expires_at: { type: Date, required: true, expires: 0 },
   created_at: { type: Date, required: true },
 });

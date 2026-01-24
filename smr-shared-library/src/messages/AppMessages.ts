@@ -36,4 +36,6 @@ export enum AuthMessages {
   OTP_INVALID = "The OTP provided is invalid.",
   OTP_EXPIRED = "The OTP has expired.",
   OTP_NOT_FOUND = "No OTP Found.",
+  OTP_LIMIT_EXCEEDED = "You have exceeded the limit for OTP generations. Please try later.",
+  OTP_GENERATED = "New otp generated and sent to your registered Email.",
 }

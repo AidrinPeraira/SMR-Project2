@@ -28,6 +28,12 @@ export function createAuthRouter(authController: IAuthController) {
     "/verify-and-register",
     asyncHandler(authController.verifyRegisterOtp.bind(authController)),
   );
+
+  router.post(
+    "/resend-otp",
+    asyncHandler(authController.resendOtp.bind(authController)),
+  );
+
   return router;
 }
 

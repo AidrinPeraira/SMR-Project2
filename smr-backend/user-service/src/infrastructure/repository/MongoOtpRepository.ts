@@ -31,6 +31,7 @@ export class MongoOtpRepository implements IOTPRepository {
           $set: {
             otp: otp.otp,
             attempts: otp.attempts,
+            resends: otp.resends,
             expires_at: otp.expires_at,
             created_at: otp.created_at,
           },
@@ -57,6 +58,7 @@ export class MongoOtpRepository implements IOTPRepository {
       email: otpDoc.email,
       type: otpDoc.type,
       attempts: otpDoc.attempts,
+      resends: otpDoc.resends,
       otp: otpDoc.otp,
       expires_at: otpDoc.expires_at,
       created_at: otpDoc.created_at,
