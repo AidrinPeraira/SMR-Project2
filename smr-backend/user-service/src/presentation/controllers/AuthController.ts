@@ -1,3 +1,4 @@
+import { IForgotPasswordUseCase } from "@/application/interfaces/use-case/auth/IForgotPasswordUseCase.js";
 import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
 import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
@@ -35,6 +36,7 @@ export class AuthController implements IAuthController {
     private readonly _verifyEmailOTPUseCase: IVerifyEmailOTPUseCase,
     private readonly _verifyEmailAndLogin: IVerifyEmailAndLoginUseCase,
     private readonly _resendOtpUseCase: IResendOtpUseCase,
+    private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
   ) {}
 
   /**
@@ -167,7 +169,7 @@ export class AuthController implements IAuthController {
    * @param req req object with email and otp type
    * @param res
    */
-  async resendOtp(req: Request, res: Response): Promise<void> {
+  async resendEmailOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email_id: email, otp_type: type } = safeParseOrThrow(
         VerifyOtpSchema.pick({
@@ -185,6 +187,38 @@ export class AuthController implements IAuthController {
         .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
     } catch (error: unknown) {
       handleControllerError(res, error, "Resend OTP Controller");
+    }
+  }
+
+  /**
+   * This function calls the forgot password use case
+   * then the send email otp use case to initiate password
+   * rest procedure
+   *
+   * @param req request object with email and otp type
+   * @param res
+   */
+  async forgotPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { email_id: email, otp_type: type } = safeParseOrThrow(
+        VerifyOtpSchema.pick({
+          email_id: true,
+          otp_type: true,
+        }),
+        req.body,
+      );
+
+      logger.info(`Password reset request: ${email}`);
+
+      const restData = await this._forgotPasswordUseCase.execute(email);
+
+      this._sendOTPMailUseCase.execute(restData);
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Forgot Password Controller");
     }
   }
 }

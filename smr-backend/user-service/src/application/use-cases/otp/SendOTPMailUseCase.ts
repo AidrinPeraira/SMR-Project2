@@ -38,6 +38,13 @@ export class SendOTPMailUseCase implements ISendOTPEMailUseCase {
       );
     }
 
+    const existingOtp = await this._otpRepository.findOtp(
+      data.email_id,
+      data.otp_type,
+    );
+
+    if (existingOtp) return;
+
     //generate otp and publish event for the notification service to send an email
     const otp = this._otpGenerator.generate(AppConfig.OTP_LENGTH);
     const now = new Date();
@@ -47,6 +54,7 @@ export class SendOTPMailUseCase implements ISendOTPEMailUseCase {
       otp,
       type: data.otp_type,
       attempts: 0,
+      resends: 0,
       created_at: now,
       expires_at: new Date(now.getTime() + AppConfig.OTP_EXPIRY_SECONDS * 1000),
     });

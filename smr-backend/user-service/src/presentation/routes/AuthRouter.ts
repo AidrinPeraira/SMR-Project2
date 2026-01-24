@@ -31,7 +31,12 @@ export function createAuthRouter(authController: IAuthController) {
 
   router.post(
     "/resend-otp",
-    asyncHandler(authController.resendOtp.bind(authController)),
+    asyncHandler(authController.resendEmailOtp.bind(authController)),
+  );
+
+  router.post(
+    "/forgot-password",
+    asyncHandler(authController.forgotPassword.bind(authController)),
   );
 
   return router;

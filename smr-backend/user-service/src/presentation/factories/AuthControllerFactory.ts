@@ -1,6 +1,7 @@
 //we use this file to pass all the dependencies for dependency injection.
 //this reduces code in index.js
 
+import { ForgotPasswordUseCase } from "@/application/use-cases/auth/ForgotPasswordUseCase.js";
 import { LoginUserUseCase } from "@/application/use-cases/auth/LoginUserUseCase.js";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
 import { VerifyEmailAndLoginUseCase } from "@/application/use-cases/auth/VerifyEmailAndLoginUseCase.js";
@@ -56,6 +57,10 @@ const resendEMailOTPUseCase = new ResendOtpUseCase(
   otpGenerator,
   eventBus,
 );
+const forgotPasswordUseCase = new ForgotPasswordUseCase(
+  userRepository,
+  otpGenerator,
+);
 
 // ------------ controller ------------------
 export const authController = new AuthController(
@@ -65,4 +70,5 @@ export const authController = new AuthController(
   verifyEmailOTPUseCase,
   verifyEmailAndLoginUseCase,
   resendEMailOTPUseCase,
+  forgotPasswordUseCase,
 );
