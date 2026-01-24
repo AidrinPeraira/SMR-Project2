@@ -5,6 +5,7 @@ import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/a
 import { IResendOtpUseCase } from "@/application/interfaces/use-case/otp/IResendOTPEMailUseCase.js";
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
 import { IVerifyEmailOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyEmailOTPUseCase.js";
+import { IVerifyForgotPasswordOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyForgotPasswordOTPUseCase.js";
 import { IAuthController } from "@/presentation/interfaces/IAuthController.js";
 import {
   toLoginRequestDto,
@@ -38,6 +39,7 @@ export class AuthController implements IAuthController {
     private readonly _verifyEmailAndLogin: IVerifyEmailAndLoginUseCase,
     private readonly _resendOtpUseCase: IResendOtpUseCase,
     private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
+    private readonly _verifyForgotPasswordOTPUseCase: IVerifyForgotPasswordOTPUseCase,
   ) {}
 
   /**
@@ -209,6 +211,44 @@ export class AuthController implements IAuthController {
       await this._forgotPasswordUseCase.execute(email);
     } catch (error: unknown) {
       handleControllerError(res, error, "Forgot Password Controller");
+    }
+  }
+
+  /**
+   *
+   * This function calls the verify otp for password reset
+   * use case.
+   *
+   * It verfies the otp and returns a token for validation before
+   * password reset
+   *
+   * @param req req object with email otp and type
+   * @param res
+   * @returns
+   */
+  async verifyForgotPasswordOTP(req: Request, res: Response): Promise<void> {
+    try {
+      const { email_id, otp_number, otp_type } = safeParseOrThrow(
+        VerifyOtpSchema,
+        req.body,
+      );
+
+      logger.info("Verfying OTP to reset password: " + email_id);
+
+      const token = this._verifyForgotPasswordOTPUseCase.execute({
+        email: email_id,
+        otp: otp_number,
+        type: otp_type,
+      });
+
+      res
+        .status(HttpStatus.OK)
+        .json(
+          makeSuccessResponse(AuthMessages.OTP_VERIFIED, { email_id, token }),
+        );
+      return;
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Verify Forgot Password Controller");
     }
   }
 }

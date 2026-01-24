@@ -34,6 +34,7 @@ export enum AuthMessages {
   ACCOUNT_UNAVAILABLE = "This account has been suspended / deleted. Please contact support.",
 
   OTP_INVALID = "The OTP provided is invalid.",
+  OTP_VERIFIED = "OTP successfuly verified.",
   OTP_EXPIRED = "The OTP has expired.",
   OTP_NOT_FOUND = "No OTP Found.",
   OTP_LIMIT_EXCEEDED = "You have exceeded the limit for OTP generations. Please try later.",

@@ -39,6 +39,11 @@ export function createAuthRouter(authController: IAuthController) {
     asyncHandler(authController.forgotPassword.bind(authController)),
   );
 
+  router.post(
+    "/verify-forgot-password",
+    asyncHandler(authController.verifyForgotPasswordOTP.bind(authController)),
+  );
+
   return router;
 }
 
