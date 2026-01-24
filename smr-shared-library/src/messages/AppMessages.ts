@@ -12,7 +12,9 @@ export enum AuthMessages {
   FORBIDDEN = "Access denied. You do not have permission to view this resource.",
 
   USER_ALREADY_EXISTS = "A user with given credentials already exists. Please login to continue.",
+  USER_REGISTERED = "New User registerd. Verify Email to continue.",
   USER_NOT_FOUND = "User not registered with this email. Signup to continue.",
+
   INVALID_CREDENTIALS = "The email or password provided is incorrect.",
   LOGOUT_SUCCESS = "You have been successfully logged out.",
   LOGIN_SUCCESS = "You have been successfully logged in.",
