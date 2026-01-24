@@ -1,3 +1,4 @@
+import { IForgotPasswordUseCase } from "@/application/interfaces/use-case/auth/IForgotPasswordUseCase.js";
 import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
 import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
@@ -18,6 +19,7 @@ import {
   AuthMessages,
   HttpStatus,
   logger,
+  LoginUserSchema,
   makeSuccessResponse,
   OTPType,
   safeParseOrThrow,
@@ -35,6 +37,7 @@ export class AuthController implements IAuthController {
     private readonly _verifyEmailOTPUseCase: IVerifyEmailOTPUseCase,
     private readonly _verifyEmailAndLogin: IVerifyEmailAndLoginUseCase,
     private readonly _resendOtpUseCase: IResendOtpUseCase,
+    private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
   ) {}
 
   /**
@@ -185,6 +188,27 @@ export class AuthController implements IAuthController {
         .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
     } catch (error: unknown) {
       handleControllerError(res, error, "Resend OTP Controller");
+    }
+  }
+
+  /**
+   * This function calls the forgot passoword use case
+   * which finds the right user for the email and
+   * sends an otp for forgot password verification
+   *
+   * @param req request object with email id in body
+   * @param res
+   */
+  async forgotPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { email_id: email } = safeParseOrThrow(
+        LoginUserSchema.pick({ email_id: true }),
+        req.body,
+      );
+
+      await this._forgotPasswordUseCase.execute(email);
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Forgot Password Controller");
     }
   }
 }

@@ -5,4 +5,5 @@ export interface IAuthController {
   login(req: Request, res: Response): Promise<void>;
   verifyRegisterOtp(req: Request, res: Response): Promise<void>;
   resendEmailOtp(req: Request, res: Response): Promise<void>;
+  forgotPassword(req: Request, res: Response): Promise<void>;
 }
