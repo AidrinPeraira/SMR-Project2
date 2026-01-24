@@ -4,6 +4,7 @@
 import { ForgotPasswordUseCase } from "@/application/use-cases/auth/ForgotPasswordUseCase.js";
 import { LoginUserUseCase } from "@/application/use-cases/auth/LoginUserUseCase.js";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
+import { ResetPasswordUseCase } from "@/application/use-cases/auth/ResetPasswordUseCase.js";
 import { VerifyEmailAndLoginUseCase } from "@/application/use-cases/auth/VerifyEmailAndLoginUseCase.js";
 import { ResendOtpUseCase } from "@/application/use-cases/otp/ResendOTPMailUseCase.js";
 import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCase.js";
@@ -60,6 +61,13 @@ const resendEMailOTPUseCase = new ResendOtpUseCase(
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   userRepository,
   otpGenerator,
+  tokenService,
+);
+const resetPasswordUseCase = new ResetPasswordUseCase(
+  userRepository,
+  otpRepository,
+  passwordHasher,
+  tokenService,
 );
 
 // ------------ controller ------------------
@@ -71,4 +79,5 @@ export const authController = new AuthController(
   verifyEmailAndLoginUseCase,
   resendEMailOTPUseCase,
   forgotPasswordUseCase,
+  resetPasswordUseCase,
 );

@@ -39,6 +39,11 @@ export function createAuthRouter(authController: IAuthController) {
     asyncHandler(authController.forgotPassword.bind(authController)),
   );
 
+  router.post(
+    "/reset-password",
+    asyncHandler(authController.resetPassword.bind(authController)),
+  );
+
   return router;
 }
 

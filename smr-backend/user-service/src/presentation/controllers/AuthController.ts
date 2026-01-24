@@ -1,6 +1,7 @@
 import { IForgotPasswordUseCase } from "@/application/interfaces/use-case/auth/IForgotPasswordUseCase.js";
 import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
+import { IResetPasswordUseCase } from "@/application/interfaces/use-case/auth/IResetPasswordUseCase.js";
 import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
 import { IResendOtpUseCase } from "@/application/interfaces/use-case/otp/IResendOTPEMailUseCase.js";
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
@@ -15,6 +16,7 @@ import {
 import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
+  AppError,
   AppMessages,
   AuthMessages,
   HttpStatus,
@@ -27,6 +29,7 @@ import {
 } from "@smr/shared";
 import { resolveMx } from "dns";
 import { Request, Response } from "express";
+import { token } from "morgan";
 
 export class AuthController implements IAuthController {
   constructor(
@@ -37,6 +40,7 @@ export class AuthController implements IAuthController {
     private readonly _verifyEmailAndLogin: IVerifyEmailAndLoginUseCase,
     private readonly _resendOtpUseCase: IResendOtpUseCase,
     private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
+    private readonly _resetPasswordUseCase: IResetPasswordUseCase,
   ) {}
 
   /**
@@ -210,15 +214,44 @@ export class AuthController implements IAuthController {
 
       logger.info(`Password reset request: ${email}`);
 
-      const restData = await this._forgotPasswordUseCase.execute(email);
+      const resetData = await this._forgotPasswordUseCase.execute(email);
 
-      this._sendOTPMailUseCase.execute(restData);
+      this._sendOTPMailUseCase.execute(resetData.user);
 
       res
         .status(HttpStatus.OK)
-        .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
+        .json(makeSuccessResponse(AuthMessages.OTP_GENERATED, resetData));
     } catch (error: unknown) {
       handleControllerError(res, error, "Forgot Password Controller");
+    }
+  }
+
+  /**
+   * this function allows user password to be changed
+   * it call the reset password use case.
+   *
+   * the use case checks the email user and token
+   *
+   * @param req req body with email, new password and verification token
+   * @param res
+   * @returns
+   */
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        email_id: email,
+        new_password: password,
+        reset_token: resetToken,
+      } = req.body;
+      await this._resetPasswordUseCase.execute(email, resetToken, password);
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.PASSWORD_UPDATE_SUCCESS));
+
+      return;
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Reset Password Controller");
     }
   }
 }

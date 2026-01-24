@@ -1,3 +1,4 @@
+import { OTPTokenData } from "@/application/dto/OtpDTO.js";
 import { UserRoles } from "@smr/shared";
 
 export interface RegisterUserRequestDTO {
@@ -32,4 +33,9 @@ export interface LoginUserResultDTO {
   };
   accessToken: string;
   refreshToken: string;
+}
+
+export interface ForgotPasswordResultDTO {
+  user: OTPTokenData;
+  resetToken: string;
 }

@@ -24,7 +24,6 @@ export enum AuthMessages {
 
   PASSWORD_RESET_SENT = "If an account exists for this email, a reset link has been sent.",
   PASSWORD_UPDATE_SUCCESS = "Your password has been updated successfully.",
-  WEAK_PASSWORD = "The password does not meet the minimum security requirements.",
 
   EMAIL_VERIFICATION_REQUIRED = "Email not verified. Signup to continue registration.",
   EMAIL_VERIFIED_SUCCESS = "Your email has been successfully verified.",

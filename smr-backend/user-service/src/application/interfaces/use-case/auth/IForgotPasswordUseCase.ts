@@ -1,5 +1,5 @@
-import { SendEmailOTPData } from "@smr/shared";
+import { ForgotPasswordResultDTO } from "@/application/dto/UserDTO.js";
 
 export interface IForgotPasswordUseCase {
-  execute(email: string): Promise<Partial<SendEmailOTPData>>;
+  execute(email: string): Promise<ForgotPasswordResultDTO>;
 }
