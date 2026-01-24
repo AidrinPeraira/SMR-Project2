@@ -3,7 +3,14 @@ import { IUserRepository } from "@/application/interfaces/repository/IUserReposi
 import { ITokenService } from "@/application/interfaces/service/ITokenService.js";
 import { IVerifyEmailOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyEmailOTPUseCase.js";
 import { IVerifyForgotPasswordOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyForgotPasswordOTPUseCase.js";
-import { AppError, AppErrorCode, AuthMessages, HttpStatus } from "@smr/shared";
+import {
+  AppError,
+  AppErrorCode,
+  AuthMessages,
+  HttpStatus,
+  OTPTokenPayloadType,
+  TokenType,
+} from "@smr/shared";
 
 export class VerifyForgotPasswordOTPUseCase implements IVerifyForgotPasswordOTPUseCase {
   constructor(
@@ -25,7 +32,15 @@ export class VerifyForgotPasswordOTPUseCase implements IVerifyForgotPasswordOTPU
       );
     }
 
-    const token = this._tokenService.createToken({ user_id: user.userId });
+    const now = Date.now() / 1000;
+    const payload: OTPTokenPayloadType = {
+      user_id: user.userId,
+      email: user.email,
+      type: TokenType.FORGOT_PASSWORD,
+      iat: now,
+      exp: now + 10 * 60,
+    };
+    const token = this._tokenService.createToken<OTPTokenPayloadType>(payload);
 
     return { verifyToken: token };
   }

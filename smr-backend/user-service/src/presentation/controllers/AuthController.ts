@@ -1,6 +1,7 @@
 import { IForgotPasswordUseCase } from "@/application/interfaces/use-case/auth/IForgotPasswordUseCase.js";
 import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
+import { IResetPasswordUseCase } from "@/application/interfaces/use-case/auth/IResetPasswordUseCase.js";
 import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
 import { IResendOtpUseCase } from "@/application/interfaces/use-case/otp/IResendOTPEMailUseCase.js";
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
@@ -23,6 +24,7 @@ import {
   LoginUserSchema,
   makeSuccessResponse,
   OTPType,
+  ResetPasswordSchema,
   safeParseOrThrow,
   SendEmailOTPData,
   VerifyOtpSchema,
@@ -40,6 +42,7 @@ export class AuthController implements IAuthController {
     private readonly _resendOtpUseCase: IResendOtpUseCase,
     private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
     private readonly _verifyForgotPasswordOTPUseCase: IVerifyForgotPasswordOTPUseCase,
+    private readonly _resetPasswordUseCase: IResetPasswordUseCase,
   ) {}
 
   /**
@@ -249,6 +252,32 @@ export class AuthController implements IAuthController {
       return;
     } catch (error: unknown) {
       handleControllerError(res, error, "Verify Forgot Password Controller");
+    }
+  }
+
+  /**
+   *
+   * This funciton calls the rest password use case
+   * that changes and resets the users password
+   *
+   * @param req req object with email token and new password
+   * @param res
+   */
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        email_id: email,
+        reset_token: token,
+        new_password: newPassword,
+      } = safeParseOrThrow(ResetPasswordSchema, req.body);
+
+      await this._resetPasswordUseCase.execute(email, token, newPassword);
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.PASSWORD_UPDATE_SUCCESS));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Reset Password Controller");
     }
   }
 }

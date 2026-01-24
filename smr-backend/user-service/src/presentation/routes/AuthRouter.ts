@@ -44,6 +44,11 @@ export function createAuthRouter(authController: IAuthController) {
     asyncHandler(authController.verifyForgotPasswordOTP.bind(authController)),
   );
 
+  router.post(
+    "/reset-password",
+    asyncHandler(authController.resetPassword.bind(authController)),
+  );
+
   return router;
 }
 
