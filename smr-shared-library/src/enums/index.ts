@@ -5,3 +5,5 @@ export * from "./OTPTypes.js";
 export * from "./EventEnums.js";
 export * from "./RepoErrorCodes.js";
 export * from "./TokenTypes.js";
+export * from "./DriverEnums.js";
+

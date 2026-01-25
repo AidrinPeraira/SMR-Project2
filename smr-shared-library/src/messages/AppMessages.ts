@@ -39,3 +39,13 @@ export enum AuthMessages {
   OTP_LIMIT_EXCEEDED = "You have exceeded the limit for OTP generations. Please try later.",
   OTP_GENERATED = "New otp generated and sent to your registered Email.",
 }
+
+export enum DriverMessages {
+  DRIVER_APPLICATION_PENDING = "A pending driver application already exists for this user.",
+  DRIVER_ALREADY_EXISTS = "Driver already exists.",
+  DRIVER_APPLICATION_SUCCESS = "Driver application submitted successfully.",
+  DRIVER_NOT_FOUND = "Driver not found.",
+  DRIVER_REGISTERED = "Driver registered successfully.",
+  DRIVER_UPDATED = "Driver updated successfully.",
+  DRIVER_DELETED = "Driver deleted successfully.",
+}

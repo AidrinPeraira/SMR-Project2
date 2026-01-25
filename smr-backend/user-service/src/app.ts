@@ -12,6 +12,8 @@ import {
 } from "@smr/shared";
 import { createAuthRouter } from "@/presentation/routes/AuthRouter.js";
 import { authController } from "@/presentation/factories/AuthControllerFactory.js";
+import { createDriverRouter } from "@/presentation/routes/DriverRoutes.js";
+import { driverController } from "@/presentation/factories/DriverControllerFactory.js";
 
 export function createApp() {
   dotenv.config({ override: false });
@@ -29,6 +31,7 @@ export function createApp() {
 
   //mounting the routers
   app.use("/auth", createAuthRouter(authController));
+  app.use("/driver", createDriverRouter(driverController));
 
   //global error handler
   app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {

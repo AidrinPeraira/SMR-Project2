@@ -22,4 +22,7 @@ export const AppConfig = {
 
   GENERIC_TOKEN_SECRET:
     String(process.env.GENERIC_TOKEN_SECRET) || "random-long-secret-key",
+
+  REDIS_HOST: process.env.REDIS_HOST || "localhost",
+  REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 };
