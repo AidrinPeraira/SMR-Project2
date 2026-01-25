@@ -22,6 +22,7 @@ export class VerifyForgotPasswordOTPUseCase implements IVerifyForgotPasswordOTPU
   async execute(data: VerifyOtpRequestDTO): Promise<{ verifyToken: string }> {
     const verification = await this._verifyEMailOTPUseCase.execute(data);
 
+    console.log("verrification: ", verification);
     const user = await this._userRepository.findByEmail(verification.email);
 
     if (!user) {

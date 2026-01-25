@@ -17,7 +17,6 @@ import {
 import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
-  AppMessages,
   AuthMessages,
   HttpStatus,
   logger,
@@ -29,7 +28,6 @@ import {
   SendEmailOTPData,
   VerifyOtpSchema,
 } from "@smr/shared";
-import { resolveMx } from "dns";
 import { Request, Response } from "express";
 
 export class AuthController implements IAuthController {
@@ -211,7 +209,13 @@ export class AuthController implements IAuthController {
         req.body,
       );
 
+      logger.info("Sending forgot password OTP: " + email);
+
       await this._forgotPasswordUseCase.execute(email);
+
+      res
+        .status(HttpStatus.CREATED)
+        .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
     } catch (error: unknown) {
       handleControllerError(res, error, "Forgot Password Controller");
     }
@@ -238,11 +242,12 @@ export class AuthController implements IAuthController {
 
       logger.info("Verfying OTP to reset password: " + email_id);
 
-      const token = this._verifyForgotPasswordOTPUseCase.execute({
-        email: email_id,
-        otp: otp_number,
-        type: otp_type,
-      });
+      const { verifyToken: token } =
+        await this._verifyForgotPasswordOTPUseCase.execute({
+          email: email_id,
+          otp: otp_number,
+          type: otp_type,
+        });
 
       res
         .status(HttpStatus.OK)
