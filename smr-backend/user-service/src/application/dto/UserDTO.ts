@@ -33,6 +33,7 @@ export interface LoginUserResultDTO {
   };
   accessToken: string;
   refreshToken: string;
+  sessionId: string;
 }
 
 export interface ForgotPasswordResultDTO {

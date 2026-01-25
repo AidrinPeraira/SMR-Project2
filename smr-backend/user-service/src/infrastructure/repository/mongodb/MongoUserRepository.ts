@@ -1,7 +1,7 @@
 import { IUserRepository } from "@/application/interfaces/repository/IUserRepository.js";
 import { UserEntity } from "@/domain/entities/UserEntity.js";
 import { UserDoc } from "@/infrastructure/database/models/MongoUserModel.js";
-import { MongoBaseRepository } from "@/infrastructure/repository/MongoBaseRepository.js";
+import { MongoBaseRepository } from "@/infrastructure/repository/mongodb/MongoBaseRepository.js";
 import { Model } from "mongoose";
 
 export class MongoUserRepository

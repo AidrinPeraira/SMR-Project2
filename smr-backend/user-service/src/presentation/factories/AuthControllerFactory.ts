@@ -11,11 +11,13 @@ import { ResendOtpUseCase } from "@/application/use-cases/otp/ResendOTPMailUseCa
 import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCase.js";
 import { VerifyEmailOTPUseCase } from "@/application/use-cases/otp/VerifyEmailOTPUseCase.js";
 import { VerifyForgotPasswordOTPUseCase } from "@/application/use-cases/otp/VerifyForgotPasswordOTPUseCase.js";
+import { CreateSessionUseCase } from "@/application/use-cases/session/CreateSessionUseCase.js";
 import { CounterModel } from "@/infrastructure/database/models/MongoCounterModel.js";
 import { OtpModel } from "@/infrastructure/database/models/MongoOtpModel.js";
 import { UserModel } from "@/infrastructure/database/models/MongoUserModel.js";
-import { MongoOtpRepository } from "@/infrastructure/repository/MongoOtpRepository.js";
-import { MongoUserRepository } from "@/infrastructure/repository/MongoUserRepository.js";
+import { MongoOtpRepository } from "@/infrastructure/repository/mongodb/MongoOtpRepository.js";
+import { MongoUserRepository } from "@/infrastructure/repository/mongodb/MongoUserRepository.js";
+import { RedisSessionRepository } from "@/infrastructure/repository/redis/RedisSessionRepository.js";
 import { MongoCounterService } from "@/infrastructure/services/CounterService.js";
 import { JwtTokenService } from "@/infrastructure/services/JwtTokenService.js";
 import { OtpGenerator } from "@/infrastructure/services/OtpGenerator.js";
@@ -27,6 +29,7 @@ import { eventBus } from "@/presentation/factories/EventBusFactory.js";
 const userRepository = new MongoUserRepository(UserModel);
 const otpRepository = new MongoOtpRepository(OtpModel);
 const counterService = new MongoCounterService(CounterModel);
+const sessionRepository = new RedisSessionRepository();
 
 // ------------ services ------------------
 const passwordHasher = new BcryptPasswordHasher();
@@ -79,6 +82,10 @@ const googleAuthUseCase = new GoogleAuthUseCase(
   tokenService,
   counterService,
 );
+const createSessionUseCase = new CreateSessionUseCase(
+  sessionRepository,
+  counterService,
+);
 
 // ------------ controller ------------------
 export const authController = new AuthController(
@@ -92,4 +99,5 @@ export const authController = new AuthController(
   verifyForgotPasswordOTPUseCase,
   resetPasswordUseCase,
   googleAuthUseCase,
+  createSessionUseCase,
 );

@@ -80,7 +80,10 @@ export function toLoginRequestDto(req: Request): LoginUserRequestDTO {
  * @param newUser the data to be sent to frontend after reg
  * @returns data in frontend shape
  */
-export function toLoginResponseDto(data: LoginUserResultDTO): LoginResponseDTO {
+export function toLoginResponseDto(
+  data: LoginUserResultDTO,
+  session_id: string,
+): LoginResponseDTO {
   return {
     user: {
       user_id: data.user.userId,
@@ -92,5 +95,6 @@ export function toLoginResponseDto(data: LoginUserResultDTO): LoginResponseDTO {
     },
     access_token: data.accessToken,
     refresh_token: data.refreshToken,
+    session_id,
   };
 }
