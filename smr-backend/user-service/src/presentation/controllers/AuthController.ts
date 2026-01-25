@@ -8,6 +8,7 @@ import { IResendOtpUseCase } from "@/application/interfaces/use-case/otp/IResend
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
 import { IVerifyEmailOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyEmailOTPUseCase.js";
 import { IVerifyForgotPasswordOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyForgotPasswordOTPUseCase.js";
+import { ICreateSessionUseCase } from "@/application/interfaces/use-case/session/ICreateSessionUseCase.js";
 import { IAuthController } from "@/presentation/interfaces/IAuthController.js";
 import {
   toLoginRequestDto,
@@ -18,13 +19,10 @@ import {
 import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
-  AppError,
-  AppMessages,
   AuthMessages,
   HttpStatus,
   logger,
   LoginUserSchema,
-  makeFailedResponse,
   makeSuccessResponse,
   OTPType,
   RegisterUserBaseSchema,
@@ -34,7 +32,6 @@ import {
   VerifyOtpSchema,
 } from "@smr/shared";
 import { Request, Response } from "express";
-import { token } from "morgan";
 
 export class AuthController implements IAuthController {
   constructor(
@@ -48,6 +45,7 @@ export class AuthController implements IAuthController {
     private readonly _verifyForgotPasswordOTPUseCase: IVerifyForgotPasswordOTPUseCase,
     private readonly _resetPasswordUseCase: IResetPasswordUseCase,
     private readonly _googleAuthUseCase: IGoogleAuthUseCase,
+    private readonly _createSessionUseCase: ICreateSessionUseCase,
   ) {}
 
   /**
@@ -85,6 +83,9 @@ export class AuthController implements IAuthController {
 
       await this._sendOTPMailUseCase.execute(data);
 
+      logger.info(`Register OTP Email sent to ${userData.email}.`);
+
+      logger.info(`User created: ${newUser.userId}`);
       res
         .status(HttpStatus.CREATED)
         .json(
@@ -117,12 +118,23 @@ export class AuthController implements IAuthController {
 
       const loggedInUser = await this._loginUserUseCase.execute(userData);
 
+      const sessionData = {
+        userId: loggedInUser.user.userId,
+        role: loggedInUser.user.role,
+        accessToken: loggedInUser.accessToken,
+        refreshToken: loggedInUser.refreshToken,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      };
+      const sessionId = await this._createSessionUseCase.execute(sessionData);
+
+      logger.info(`User logged in: ${loggedInUser.user.userId}`);
       res
         .status(HttpStatus.CREATED)
         .json(
           makeSuccessResponse(
             AuthMessages.LOGIN_SUCCESS,
-            toLoginResponseDto(loggedInUser),
+            toLoginResponseDto(loggedInUser, sessionId),
           ),
         );
 
@@ -157,12 +169,26 @@ export class AuthController implements IAuthController {
         result.email,
       );
 
+      const sessionData = {
+        userId: loggedInUser.user.userId,
+        role: loggedInUser.user.role,
+        accessToken: loggedInUser.accessToken,
+        refreshToken: loggedInUser.refreshToken,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      };
+
+      const sessionId = await this._createSessionUseCase.execute(sessionData);
+
+      logger.info(
+        `Registreed email verified. User logger in: ${loggedInUser.user.userId}`,
+      );
       res
         .status(HttpStatus.CREATED)
         .json(
           makeSuccessResponse(
             AuthMessages.LOGIN_SUCCESS,
-            toLoginResponseDto(loggedInUser),
+            toLoginResponseDto(loggedInUser, sessionId),
           ),
         );
 
@@ -190,8 +216,9 @@ export class AuthController implements IAuthController {
         req.body,
       );
 
-      logger.info(`Rensend Email OTP Attempt: ${email}`);
+      logger.info(`Resend Email OTP Attempt: ${email}. Type: ${type}`);
       await this._resendOtpUseCase.execute(email, type);
+      logger.info(`Resend Email OTP Success: ${email}. Type: ${type}`);
 
       res
         .status(HttpStatus.OK)
@@ -220,6 +247,7 @@ export class AuthController implements IAuthController {
 
       await this._forgotPasswordUseCase.execute(email);
 
+      logger.info("Sent forgot password OTP: " + email);
       res
         .status(HttpStatus.CREATED)
         .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
@@ -256,6 +284,7 @@ export class AuthController implements IAuthController {
           type: otp_type,
         });
 
+      logger.info("Verified OTP to reset password: " + email_id);
       res
         .status(HttpStatus.OK)
         .json(
@@ -283,8 +312,10 @@ export class AuthController implements IAuthController {
         new_password: newPassword,
       } = safeParseOrThrow(ResetPasswordSchema, req.body);
 
+      logger.info(`Reset password attempt: ${email}`);
       await this._resetPasswordUseCase.execute(email, token, newPassword);
 
+      logger.info(`Password reset: ${email}`);
       res
         .status(HttpStatus.OK)
         .json(makeSuccessResponse(AuthMessages.PASSWORD_UPDATE_SUCCESS));
@@ -320,6 +351,7 @@ export class AuthController implements IAuthController {
         req.body,
       );
 
+      logger.info(`Google Auth attempt: ${email}`);
       const loggedInUser = await this._googleAuthUseCase.execute({
         email,
         firstName,
@@ -327,9 +359,26 @@ export class AuthController implements IAuthController {
         profileImage,
       });
 
+      const sessionData = {
+        userId: loggedInUser.user.userId,
+        role: loggedInUser.user.role,
+        accessToken: loggedInUser.accessToken,
+        refreshToken: loggedInUser.refreshToken,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      };
+      const sessionId = await this._createSessionUseCase.execute(sessionData);
+
+      logger.info(`Logged in with google: ${loggedInUser.user.userId}`);
       res
-        .status(HttpStatus.OK)
-        .json(makeSuccessResponse(AuthMessages.LOGIN_SUCCESS, loggedInUser));
+        .status(HttpStatus.CREATED)
+        .json(
+          makeSuccessResponse(
+            AuthMessages.LOGIN_SUCCESS,
+            toLoginResponseDto(loggedInUser, sessionId),
+          ),
+        );
+      return;
     } catch (error: unknown) {
       handleControllerError(res, error, "Google Auth Controller");
     }
