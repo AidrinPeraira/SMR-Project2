@@ -24,7 +24,6 @@ export enum AuthMessages {
 
   PASSWORD_RESET_SENT = "If an account exists for this email, a reset link has been sent.",
   PASSWORD_UPDATE_SUCCESS = "Your password has been updated successfully.",
-  WEAK_PASSWORD = "The password does not meet the minimum security requirements.",
 
   EMAIL_VERIFICATION_REQUIRED = "Email not verified. Signup to continue registration.",
   EMAIL_VERIFIED_SUCCESS = "Your email has been successfully verified.",
@@ -34,6 +33,9 @@ export enum AuthMessages {
   ACCOUNT_UNAVAILABLE = "This account has been suspended / deleted. Please contact support.",
 
   OTP_INVALID = "The OTP provided is invalid.",
+  OTP_VERIFIED = "OTP successfuly verified.",
   OTP_EXPIRED = "The OTP has expired.",
   OTP_NOT_FOUND = "No OTP Found.",
+  OTP_LIMIT_EXCEEDED = "You have exceeded the limit for OTP generations. Please try later.",
+  OTP_GENERATED = "New otp generated and sent to your registered Email.",
 }

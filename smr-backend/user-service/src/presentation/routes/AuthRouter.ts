@@ -28,6 +28,32 @@ export function createAuthRouter(authController: IAuthController) {
     "/verify-and-register",
     asyncHandler(authController.verifyRegisterOtp.bind(authController)),
   );
+
+  router.post(
+    "/resend-otp",
+    asyncHandler(authController.resendEmailOtp.bind(authController)),
+  );
+
+  router.post(
+    "/forgot-password",
+    asyncHandler(authController.forgotPassword.bind(authController)),
+  );
+
+  router.post(
+    "/verify-forgot-password",
+    asyncHandler(authController.verifyForgotPasswordOTP.bind(authController)),
+  );
+
+  router.post(
+    "/reset-password",
+    asyncHandler(authController.resetPassword.bind(authController)),
+  );
+
+  router.post(
+    "/google-auth",
+    asyncHandler(authController.googleAuth.bind(authController)),
+  );
+
   return router;
 }
 

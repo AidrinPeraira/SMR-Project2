@@ -5,6 +5,7 @@ export interface OtpModel {
   otp: string;
   type: OTPType;
   attempts: number;
+  resends: number;
   expires_at: Date;
   created_at: Date;
 }

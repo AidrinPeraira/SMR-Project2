@@ -1,8 +1,13 @@
+import { IForgotPasswordUseCase } from "@/application/interfaces/use-case/auth/IForgotPasswordUseCase.js";
+import { IGoogleAuthUseCase } from "@/application/interfaces/use-case/auth/IGoogleAuthUseCase.js";
 import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
+import { IResetPasswordUseCase } from "@/application/interfaces/use-case/auth/IResetPasswordUseCase.js";
 import { IVerifyEmailAndLoginUseCase } from "@/application/interfaces/use-case/auth/IVerifyEmailAndLoginUseCase.js";
+import { IResendOtpUseCase } from "@/application/interfaces/use-case/otp/IResendOTPEMailUseCase.js";
 import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISendOTPEMailUseCase.js";
 import { IVerifyEmailOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyEmailOTPUseCase.js";
+import { IVerifyForgotPasswordOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyForgotPasswordOTPUseCase.js";
 import { IAuthController } from "@/presentation/interfaces/IAuthController.js";
 import {
   toLoginRequestDto,
@@ -13,15 +18,23 @@ import {
 import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
+  AppError,
   AppMessages,
   AuthMessages,
   HttpStatus,
   logger,
+  LoginUserSchema,
+  makeFailedResponse,
   makeSuccessResponse,
   OTPType,
+  RegisterUserBaseSchema,
+  ResetPasswordSchema,
+  safeParseOrThrow,
   SendEmailOTPData,
+  VerifyOtpSchema,
 } from "@smr/shared";
 import { Request, Response } from "express";
+import { token } from "morgan";
 
 export class AuthController implements IAuthController {
   constructor(
@@ -30,15 +43,16 @@ export class AuthController implements IAuthController {
     private readonly _loginUserUseCase: ILoginUserUseCase,
     private readonly _verifyEmailOTPUseCase: IVerifyEmailOTPUseCase,
     private readonly _verifyEmailAndLogin: IVerifyEmailAndLoginUseCase,
+    private readonly _resendOtpUseCase: IResendOtpUseCase,
+    private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
+    private readonly _verifyForgotPasswordOTPUseCase: IVerifyForgotPasswordOTPUseCase,
+    private readonly _resetPasswordUseCase: IResetPasswordUseCase,
+    private readonly _googleAuthUseCase: IGoogleAuthUseCase,
   ) {}
 
   /**
-   * This function validates and creates the new user
-   * it sets the role as passenger. (in use case)
-   * it sets the email verified field as flase. (in use case)
-   *
-   * when the user is created successfuly this method calls the
-   * use case to verify the email using OTP
+   * This function calls the register user use case
+   * and then calls send email otp use case to send email verification otp
    *
    * @param req request object with register user data
    * @param res sucessa or failure response
@@ -86,6 +100,15 @@ export class AuthController implements IAuthController {
     }
   }
 
+  /**
+   * This function calls the login user use case
+   *
+   * It compares credentials and issues tokens
+   *
+   * @param req reqest object with login data
+   * @param res sucess of failure response
+   * @returns
+   */
   async login(req: Request, res: Response): Promise<void> {
     try {
       const userData = toLoginRequestDto(req);
@@ -146,6 +169,169 @@ export class AuthController implements IAuthController {
       return;
     } catch (error: unknown) {
       handleControllerError(res, error, "Verify EMail and Login Controller");
+    }
+  }
+
+  /**
+   * This function calls the resend otp use case
+   *
+   * it creates and send new email otp for the given type
+   *
+   * @param req req object with email and otp type
+   * @param res
+   */
+  async resendEmailOtp(req: Request, res: Response): Promise<void> {
+    try {
+      const { email_id: email, otp_type: type } = safeParseOrThrow(
+        VerifyOtpSchema.pick({
+          email_id: true,
+          otp_type: true,
+        }),
+        req.body,
+      );
+
+      logger.info(`Rensend Email OTP Attempt: ${email}`);
+      await this._resendOtpUseCase.execute(email, type);
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Resend OTP Controller");
+    }
+  }
+
+  /**
+   * This function calls the forgot passoword use case
+   * which finds the right user for the email and
+   * sends an otp for forgot password verification
+   *
+   * @param req request object with email id in body
+   * @param res
+   */
+  async forgotPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { email_id: email } = safeParseOrThrow(
+        LoginUserSchema.pick({ email_id: true }),
+        req.body,
+      );
+
+      logger.info("Sending forgot password OTP: " + email);
+
+      await this._forgotPasswordUseCase.execute(email);
+
+      res
+        .status(HttpStatus.CREATED)
+        .json(makeSuccessResponse(AuthMessages.OTP_GENERATED));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Forgot Password Controller");
+    }
+  }
+
+  /**
+   *
+   * This function calls the verify otp for password reset
+   * use case.
+   *
+   * It verfies the otp and returns a token for validation before
+   * password reset
+   *
+   * @param req req object with email otp and type
+   * @param res
+   * @returns
+   */
+  async verifyForgotPasswordOTP(req: Request, res: Response): Promise<void> {
+    try {
+      const { email_id, otp_number, otp_type } = safeParseOrThrow(
+        VerifyOtpSchema,
+        req.body,
+      );
+
+      logger.info("Verfying OTP to reset password: " + email_id);
+
+      const { verifyToken: token } =
+        await this._verifyForgotPasswordOTPUseCase.execute({
+          email: email_id,
+          otp: otp_number,
+          type: otp_type,
+        });
+
+      res
+        .status(HttpStatus.OK)
+        .json(
+          makeSuccessResponse(AuthMessages.OTP_VERIFIED, { email_id, token }),
+        );
+      return;
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Verify Forgot Password Controller");
+    }
+  }
+
+  /**
+   *
+   * This funciton calls the rest password use case
+   * that changes and resets the users password
+   *
+   * @param req req object with email token and new password
+   * @param res
+   */
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        email_id: email,
+        reset_token: token,
+        new_password: newPassword,
+      } = safeParseOrThrow(ResetPasswordSchema, req.body);
+
+      await this._resetPasswordUseCase.execute(email, token, newPassword);
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.PASSWORD_UPDATE_SUCCESS));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Reset Password Controller");
+    }
+  }
+
+  /**
+   * This functio takes detials verified by google
+   * and calls google auth use case
+   *
+   * it creates a new user or logs in existing user
+   *
+   * @param req user details verified by google
+   * @param res
+   * @returns
+   */
+  async googleAuth(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        email_id: email,
+        first_name: firstName,
+        last_name: lastName,
+        profile_image: profileImage,
+      } = safeParseOrThrow(
+        RegisterUserBaseSchema.pick({
+          email_id: true,
+          first_name: true,
+          last_name: true,
+          profile_image: true,
+        }),
+        req.body,
+      );
+
+      const loggedInUser = await this._googleAuthUseCase.execute({
+        email,
+        firstName,
+        lastName,
+        profileImage,
+      });
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.LOGIN_SUCCESS, loggedInUser));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Google Auth Controller");
     }
   }
 }

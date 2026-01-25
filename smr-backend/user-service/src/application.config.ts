@@ -19,4 +19,7 @@ export const AppConfig = {
   RABBITMQ_URL:
     String(process.env.RABBITMQ_URL) || "amqp://guest:guest@rabbit-mq:5672",
   EXCHANGE_NAME: String(process.env.EXCHANGE_NAME) || "sharemyride.events",
+
+  GENERIC_TOKEN_SECRET:
+    String(process.env.GENERIC_TOKEN_SECRET) || "random-long-secret-key",
 };
