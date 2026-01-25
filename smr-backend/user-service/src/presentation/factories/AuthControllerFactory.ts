@@ -2,6 +2,7 @@
 //this reduces code in index.js
 
 import { ForgotPasswordUseCase } from "@/application/use-cases/auth/ForgotPasswordUseCase.js";
+import { GoogleAuthUseCase } from "@/application/use-cases/auth/GoogleAuthUseCase.js";
 import { LoginUserUseCase } from "@/application/use-cases/auth/LoginUserUseCase.js";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
 import { ResetPasswordUseCase } from "@/application/use-cases/auth/ResetPasswordUseCase.js";
@@ -73,6 +74,11 @@ const resetPasswordUseCase = new ResetPasswordUseCase(
   passwordHasher,
   tokenService,
 );
+const googleAuthUseCase = new GoogleAuthUseCase(
+  userRepository,
+  tokenService,
+  counterService,
+);
 
 // ------------ controller ------------------
 export const authController = new AuthController(
@@ -85,4 +91,5 @@ export const authController = new AuthController(
   forgotPasswordUseCase,
   verifyForgotPasswordOTPUseCase,
   resetPasswordUseCase,
+  googleAuthUseCase,
 );

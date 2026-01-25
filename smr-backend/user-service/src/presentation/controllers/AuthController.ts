@@ -1,4 +1,5 @@
 import { IForgotPasswordUseCase } from "@/application/interfaces/use-case/auth/IForgotPasswordUseCase.js";
+import { IGoogleAuthUseCase } from "@/application/interfaces/use-case/auth/IGoogleAuthUseCase.js";
 import { ILoginUserUseCase } from "@/application/interfaces/use-case/auth/ILoginUserUseCase.js";
 import { IRegisterUserUseCase } from "@/application/interfaces/use-case/auth/IRegisterUserUseCase.js";
 import { IResetPasswordUseCase } from "@/application/interfaces/use-case/auth/IResetPasswordUseCase.js";
@@ -17,12 +18,15 @@ import {
 import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
+  AppMessages,
   AuthMessages,
   HttpStatus,
   logger,
   LoginUserSchema,
+  makeFailedResponse,
   makeSuccessResponse,
   OTPType,
+  RegisterUserBaseSchema,
   ResetPasswordSchema,
   safeParseOrThrow,
   SendEmailOTPData,
@@ -41,6 +45,7 @@ export class AuthController implements IAuthController {
     private readonly _forgotPasswordUseCase: IForgotPasswordUseCase,
     private readonly _verifyForgotPasswordOTPUseCase: IVerifyForgotPasswordOTPUseCase,
     private readonly _resetPasswordUseCase: IResetPasswordUseCase,
+    private readonly _googleAuthUseCase: IGoogleAuthUseCase,
   ) {}
 
   /**
@@ -283,6 +288,48 @@ export class AuthController implements IAuthController {
         .json(makeSuccessResponse(AuthMessages.PASSWORD_UPDATE_SUCCESS));
     } catch (error: unknown) {
       handleControllerError(res, error, "Reset Password Controller");
+    }
+  }
+
+  /**
+   * This functio takes detials verified by google
+   * and calls google auth use case
+   *
+   * it creates a new user or logs in existing user
+   *
+   * @param req user details verified by google
+   * @param res
+   * @returns
+   */
+  async googleAuth(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        email_id: email,
+        first_name: firstName,
+        last_name: lastName,
+        profile_image: profileImage,
+      } = safeParseOrThrow(
+        RegisterUserBaseSchema.pick({
+          email_id: true,
+          first_name: true,
+          last_name: true,
+          profile_image: true,
+        }),
+        req.body,
+      );
+
+      const loggedInUser = await this._googleAuthUseCase.execute({
+        email,
+        firstName,
+        lastName,
+        profileImage,
+      });
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse(AuthMessages.LOGIN_SUCCESS, loggedInUser));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Google Auth Controller");
     }
   }
 }

@@ -49,6 +49,11 @@ export function createAuthRouter(authController: IAuthController) {
     asyncHandler(authController.resetPassword.bind(authController)),
   );
 
+  router.post(
+    "/google-auth",
+    asyncHandler(authController.googleAuth.bind(authController)),
+  );
+
   return router;
 }
 
