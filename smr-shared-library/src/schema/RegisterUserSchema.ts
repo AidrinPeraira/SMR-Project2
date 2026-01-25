@@ -24,6 +24,13 @@ export const RegisterUserBaseSchema = z.object({
       /^(?!\.)(?!.*\.\.)([A-Z0-9_+-\.]{3,})[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i,
       { message: "Email prefix must be at least 3 characters long" },
     ),
+
+  profile_image: z
+    .string()
+    .url({ message: "Invalid image URL" })
+    .optional()
+    .or(z.literal("")),
+
   phone_number: z
     .string()
     .trim()

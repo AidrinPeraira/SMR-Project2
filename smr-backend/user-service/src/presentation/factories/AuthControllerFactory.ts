@@ -2,6 +2,7 @@
 //this reduces code in index.js
 
 import { ForgotPasswordUseCase } from "@/application/use-cases/auth/ForgotPasswordUseCase.js";
+import { GoogleAuthUseCase } from "@/application/use-cases/auth/GoogleAuthUseCase.js";
 import { LoginUserUseCase } from "@/application/use-cases/auth/LoginUserUseCase.js";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/RegisterUserUseCase.js";
 import { ResetPasswordUseCase } from "@/application/use-cases/auth/ResetPasswordUseCase.js";
@@ -9,6 +10,7 @@ import { VerifyEmailAndLoginUseCase } from "@/application/use-cases/auth/VerifyE
 import { ResendOtpUseCase } from "@/application/use-cases/otp/ResendOTPMailUseCase.js";
 import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCase.js";
 import { VerifyEmailOTPUseCase } from "@/application/use-cases/otp/VerifyEmailOTPUseCase.js";
+import { VerifyForgotPasswordOTPUseCase } from "@/application/use-cases/otp/VerifyForgotPasswordOTPUseCase.js";
 import { CounterModel } from "@/infrastructure/database/models/MongoCounterModel.js";
 import { OtpModel } from "@/infrastructure/database/models/MongoOtpModel.js";
 import { UserModel } from "@/infrastructure/database/models/MongoUserModel.js";
@@ -60,14 +62,22 @@ const resendEMailOTPUseCase = new ResendOtpUseCase(
 );
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   userRepository,
-  otpGenerator,
+  sendEmailOTPUseCase,
+);
+const verifyForgotPasswordOTPUseCase = new VerifyForgotPasswordOTPUseCase(
+  userRepository,
+  verifyEmailOTPUseCase,
   tokenService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(
   userRepository,
-  otpRepository,
   passwordHasher,
   tokenService,
+);
+const googleAuthUseCase = new GoogleAuthUseCase(
+  userRepository,
+  tokenService,
+  counterService,
 );
 
 // ------------ controller ------------------
@@ -79,5 +89,7 @@ export const authController = new AuthController(
   verifyEmailAndLoginUseCase,
   resendEMailOTPUseCase,
   forgotPasswordUseCase,
+  verifyForgotPasswordOTPUseCase,
   resetPasswordUseCase,
+  googleAuthUseCase,
 );

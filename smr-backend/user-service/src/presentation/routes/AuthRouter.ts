@@ -40,8 +40,18 @@ export function createAuthRouter(authController: IAuthController) {
   );
 
   router.post(
+    "/verify-forgot-password",
+    asyncHandler(authController.verifyForgotPasswordOTP.bind(authController)),
+  );
+
+  router.post(
     "/reset-password",
     asyncHandler(authController.resetPassword.bind(authController)),
+  );
+
+  router.post(
+    "/google-auth",
+    asyncHandler(authController.googleAuth.bind(authController)),
   );
 
   return router;

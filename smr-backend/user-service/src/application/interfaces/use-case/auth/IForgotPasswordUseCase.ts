@@ -1,5 +1,3 @@
-import { ForgotPasswordResultDTO } from "@/application/dto/UserDTO.js";
-
 export interface IForgotPasswordUseCase {
-  execute(email: string): Promise<ForgotPasswordResultDTO>;
+  execute(email: string): Promise<void>;
 }

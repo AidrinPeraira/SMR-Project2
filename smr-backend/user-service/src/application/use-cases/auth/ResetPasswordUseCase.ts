@@ -1,5 +1,3 @@
-import { OTPTokenData } from "@/application/dto/OtpDTO.js";
-import { IOTPRepository } from "@/application/interfaces/repository/IOTPRepository.js";
 import { IUserRepository } from "@/application/interfaces/repository/IUserRepository.js";
 import { IPasswordHasher } from "@/application/interfaces/service/IPasswordHasher.js";
 import { ITokenService } from "@/application/interfaces/service/ITokenService.js";
@@ -7,16 +5,15 @@ import { IResetPasswordUseCase } from "@/application/interfaces/use-case/auth/IR
 import {
   AppError,
   AppErrorCode,
-  AppMessages,
   AuthMessages,
   HttpStatus,
-  OTPType,
+  OTPTokenPayloadType,
+  TokenType,
 } from "@smr/shared";
 
 export class ResetPasswordUseCase implements IResetPasswordUseCase {
   constructor(
     private readonly _userRepository: IUserRepository,
-    private readonly _otpRepository: IOTPRepository,
     private readonly _passwordHasher: IPasswordHasher,
     private readonly _tokenService: ITokenService,
   ) {}
@@ -26,12 +23,13 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     token: string,
     newPassword: string,
   ): Promise<void> {
-    const verifiedToken = this._tokenService.verifyToken<OTPTokenData>(token);
+    const verifiedToken =
+      this._tokenService.verifyToken<OTPTokenPayloadType>(token);
 
     if (
       !verifiedToken ||
-      verifiedToken.email_id !== email ||
-      verifiedToken.otp_type !== OTPType.FORGOT_PASSWORD
+      verifiedToken.email !== email ||
+      verifiedToken.type !== TokenType.FORGOT_PASSWORD
     ) {
       throw new AppError(
         AppErrorCode.BAD_REQUEST,
@@ -54,7 +52,5 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     await this._userRepository.update(user.userId, {
       passwordHash,
     });
-
-    await this._otpRepository.deleteOtp(email, OTPType.FORGOT_PASSWORD);
   }
 }
