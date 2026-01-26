@@ -54,3 +54,44 @@ export const getEmailContent = (
 
   return { subject, html };
 };
+
+export const getDriverApplicationStatusEmailContent = (
+  status: string,
+  userName: string,
+  comment?: string,
+) => {
+  const baseStyles = `font-family: sans-serif; line-height: 1.6; color: #333;`;
+
+  const isApproved = status === "approved";
+  const title = isApproved
+    ? `Congratulations ${userName}! You are now a driver.`
+    : `Update on your Driver Application`;
+
+  const body = isApproved
+    ? `We are pleased to inform you that your driver application has been approved. You can now start accepting rides.`
+    : `We regret to inform you that your driver application has been rejected.`;
+
+  const commentHtml =
+    comment && !isApproved
+      ? `<div style="margin-top: 20px; padding: 15px; background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 6px;">
+        <strong>Admin Comment:</strong>
+        <p style="margin-top: 5px; color: #991b1b;">${comment}</p>
+      </div>`
+      : "";
+
+  const html = `
+    <div style="${baseStyles} max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+      <h2 style="color: #111827;">${title}</h2>
+      <p>${body}</p>
+      ${commentHtml}
+      <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #9ca3af;">Sent by Share My Ride. Safe travels!</p>
+    </div>
+  `;
+
+  const subject = isApproved
+    ? "Driver Application Approved"
+    : "Driver Application Status Update";
+
+  return { subject, html };
+};

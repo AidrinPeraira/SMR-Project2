@@ -21,6 +21,16 @@ export class RabbitMQConsumer {
 
       //we keep looking into the following queues
       await channel.bindQueue(QUEUE, EXCHANGE, EventName.SEND_EMAIL_OTP);
+      await channel.bindQueue(
+        QUEUE,
+        EXCHANGE,
+        EventName.DRIVER_APPLICATION_APPROVED,
+      );
+      await channel.bindQueue(
+        QUEUE,
+        EXCHANGE,
+        EventName.DRIVER_APPLICATION_REJECTED,
+      );
 
       logger.info("Notification service consumer connected to RabbitMQ");
 
