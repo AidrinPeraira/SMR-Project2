@@ -12,11 +12,17 @@ import { SendOTPMailUseCase } from "@/application/use-cases/otp/SendOTPMailUseCa
 import { VerifyEmailOTPUseCase } from "@/application/use-cases/otp/VerifyEmailOTPUseCase.js";
 import { VerifyForgotPasswordOTPUseCase } from "@/application/use-cases/otp/VerifyForgotPasswordOTPUseCase.js";
 import { CreateSessionUseCase } from "@/application/use-cases/session/CreateSessionUseCase.js";
+import { LogoutUserUseCase } from "@/application/use-cases/auth/LogoutUserUseCase.js";
 import { CounterModel } from "@/infrastructure/database/models/MongoCounterModel.js";
 import { OtpModel } from "@/infrastructure/database/models/MongoOtpModel.js";
 import { UserModel } from "@/infrastructure/database/models/MongoUserModel.js";
+import { DriverModel } from "@/infrastructure/database/models/MongoDriverModel.js";
+import { VehicleModel } from "@/infrastructure/database/models/MongoVehicleModel.js";
 import { MongoOtpRepository } from "@/infrastructure/repository/mongodb/MongoOtpRepository.js";
+
 import { MongoUserRepository } from "@/infrastructure/repository/mongodb/MongoUserRepository.js";
+import { MongoDriverRepository } from "@/infrastructure/repository/mongodb/MongoDriverRepository.js";
+import { MongoVehicleRepository } from "@/infrastructure/repository/mongodb/MongoVehicleRepository.js";
 import { RedisSessionRepository } from "@/infrastructure/repository/redis/RedisSessionRepository.js";
 import { MongoCounterService } from "@/infrastructure/services/CounterService.js";
 import { JwtTokenService } from "@/infrastructure/services/JwtTokenService.js";
@@ -27,6 +33,8 @@ import { eventBus } from "@/presentation/factories/EventBusFactory.js";
 
 // ------------ repositories ------------------
 const userRepository = new MongoUserRepository(UserModel);
+const driverRepository = new MongoDriverRepository(DriverModel);
+const vehicleRepository = new MongoVehicleRepository(VehicleModel);
 const otpRepository = new MongoOtpRepository(OtpModel);
 const counterService = new MongoCounterService(CounterModel);
 const sessionRepository = new RedisSessionRepository();
@@ -86,6 +94,7 @@ const createSessionUseCase = new CreateSessionUseCase(
   sessionRepository,
   counterService,
 );
+const logoutUserUseCase = new LogoutUserUseCase(sessionRepository);
 
 // ------------ controller ------------------
 export const authController = new AuthController(
@@ -100,4 +109,5 @@ export const authController = new AuthController(
   resetPasswordUseCase,
   googleAuthUseCase,
   createSessionUseCase,
+  logoutUserUseCase,
 );

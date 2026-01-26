@@ -30,7 +30,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
    *
    * @param input email and password
    */
-  async execute(input: LoginUserRequestDTO): Promise<LoginUserResultDTO> {
+  async execute(input: LoginUserRequestDTO): Promise<Omit<LoginUserResultDTO, "sessionId">> {
     const { email, password } = input;
 
     const user = await this._userRepository.findByEmail(email);

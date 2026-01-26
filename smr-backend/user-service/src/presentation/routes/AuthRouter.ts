@@ -54,6 +54,11 @@ export function createAuthRouter(authController: IAuthController) {
     asyncHandler(authController.googleAuth.bind(authController)),
   );
 
+  router.post(
+    "/logout",
+    asyncHandler(authController.logout.bind(authController)),
+  );
+
   return router;
 }
 

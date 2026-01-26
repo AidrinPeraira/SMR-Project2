@@ -22,7 +22,7 @@ export class GoogleAuthUseCase implements IGoogleAuthUseCase {
     private readonly _counterService: ICounterService,
   ) {}
 
-  async execute(input: GoogleAuthInput): Promise<LoginUserResultDTO> {
+  async execute(input: GoogleAuthInput):Promise<Omit<LoginUserResultDTO, "sessionId">>{
     const { email, firstName, lastName, profileImage } = input;
 
     let user = await this._userRepository.findByEmail(email);

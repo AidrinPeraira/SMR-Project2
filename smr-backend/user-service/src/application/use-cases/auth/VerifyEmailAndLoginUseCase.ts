@@ -22,7 +22,7 @@ export class VerifyEmailAndLoginUseCase implements IVerifyEmailAndLoginUseCase {
    * @param email email after successful otp verification
    * @returns access and refresh tokens
    */
-  async execute(email: string): Promise<LoginUserResultDTO> {
+  async execute(email: string): Promise<Omit<LoginUserResultDTO, "sessionId">>{
     const user = await this._userRepository.findByEmail(email);
 
     if (!user) {

@@ -9,6 +9,7 @@ import { ISendOTPEMailUseCase } from "@/application/interfaces/use-case/otp/ISen
 import { IVerifyEmailOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyEmailOTPUseCase.js";
 import { IVerifyForgotPasswordOTPUseCase } from "@/application/interfaces/use-case/otp/IVerifyForgotPasswordOTPUseCase.js";
 import { ICreateSessionUseCase } from "@/application/interfaces/use-case/session/ICreateSessionUseCase.js";
+import { ILogoutUserUseCase } from "@/application/interfaces/use-case/auth/ILogoutUserUseCase.js";
 import { IAuthController } from "@/presentation/interfaces/IAuthController.js";
 import {
   toLoginRequestDto,
@@ -19,6 +20,9 @@ import {
 import { toVerifyOTPRequestDTO } from "@/presentation/mapper/OTPMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
 import {
+  AppError,
+  AppErrorCode,
+  AppMessages,
   AuthMessages,
   HttpStatus,
   logger,
@@ -46,6 +50,7 @@ export class AuthController implements IAuthController {
     private readonly _resetPasswordUseCase: IResetPasswordUseCase,
     private readonly _googleAuthUseCase: IGoogleAuthUseCase,
     private readonly _createSessionUseCase: ICreateSessionUseCase,
+    private readonly _logoutUserUseCase: ILogoutUserUseCase,
   ) {}
 
   /**
@@ -381,6 +386,41 @@ export class AuthController implements IAuthController {
       return;
     } catch (error: unknown) {
       handleControllerError(res, error, "Google Auth Controller");
+    }
+  }
+
+  /**
+   * This function logs out the user by clearing the session
+   *
+   * @param req request object
+   * @param res response object
+   */
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      const headerValue = req.headers["x-session-id"];
+      const sessionId = Array.isArray(headerValue)
+        ? headerValue[0]
+        : headerValue;
+
+      if (!sessionId) {
+        throw new AppError(
+          AppErrorCode.BAD_REQUEST,
+          AppMessages.BAD_REQUEST,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      logger.info(`Logout attempt: ${sessionId}`);
+
+      await this._logoutUserUseCase.execute(sessionId);
+
+      logger.info(`Logged out successfully: ${sessionId}`);
+
+      res
+        .status(HttpStatus.OK)
+        .json(makeSuccessResponse("Logged out successfully"));
+    } catch (error: unknown) {
+      handleControllerError(res, error, "Logout Controller");
     }
   }
 }
