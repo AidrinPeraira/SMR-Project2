@@ -81,7 +81,7 @@ export function toLoginRequestDto(req: Request): LoginUserRequestDTO {
  * @returns data in frontend shape
  */
 export function toLoginResponseDto(
-  data: LoginUserResultDTO,
+  data: Omit<LoginUserResultDTO, "sessionId">,
   session_id: string,
 ): LoginResponseDTO {
   return {

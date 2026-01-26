@@ -4,5 +4,5 @@ import {
 } from "@/application/dto/UserDTO.js";
 
 export interface ILoginUserUseCase {
-  execute(input: LoginUserRequestDTO): Promise<LoginUserResultDTO>;
+  execute(input: LoginUserRequestDTO): Promise<Omit<LoginUserResultDTO, "sessionId">>;
 }
