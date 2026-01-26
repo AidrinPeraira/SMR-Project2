@@ -33,7 +33,12 @@ export abstract class MongoBaseRepository<
   protected abstract _toEntity(doc: DocType): EntityType;
 
   async findById(id: string): Promise<EntityType | null> {
-    const doc = await this.model.findById(id).lean().exec();
+    const query: any = {
+      [this._customIdName]: id,
+    };
+
+    const doc = await this.model.findOne(query).lean().exec();
+
     return doc ? this._toEntity(doc as DocType) : null;
   }
 

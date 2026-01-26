@@ -1,3 +1,4 @@
+import { AppConfig } from "@/application.config.js";
 import { ISessionRepository } from "@/application/interfaces/repository/ISessionRepository.js";
 import { SessionData } from "@smr/shared";
 import Redis from "ioredis";
@@ -8,8 +9,8 @@ export class RedisSessionRepository implements ISessionRepository {
 
   constructor() {
     this.client = new Redis({
-      host: process.env.REDIS_HOST || "localhost",
-      port: Number(process.env.REDIS_PORT) || 6379,
+      host: AppConfig.REDIS_HOST,
+      port: AppConfig.REDIS_PORT,
     });
   }
 
