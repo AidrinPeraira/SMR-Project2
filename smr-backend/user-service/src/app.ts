@@ -16,6 +16,8 @@ import { createDriverRouter } from "@/presentation/routes/DriverRoutes.js";
 import { driverController } from "@/presentation/factories/DriverControllerFactory.js";
 import { createAdminRouter } from "@/presentation/routes/AdminRoutes.js";
 import { adminController } from "@/presentation/factories/AdminControllerFactory.js";
+import { createProfileRouter } from "@/presentation/routes/ProfileRouter.js";
+import { profileController } from "@/presentation/factories/ProfileControllerFactory.js";
 
 export function createApp() {
   dotenv.config({ override: false });
@@ -35,6 +37,7 @@ export function createApp() {
   app.use("/auth", createAuthRouter(authController));
   app.use("/driver", createDriverRouter(driverController));
   app.use("/admin", createAdminRouter(adminController));
+  app.use("/profile", createProfileRouter(profileController));
 
   //global error handler
   app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
