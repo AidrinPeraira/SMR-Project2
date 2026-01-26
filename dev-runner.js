@@ -19,12 +19,12 @@ const apps = [
     command: "pnpm run dev",
     prefixColor: "green",
   },
-  //   {
-  //     name: "frontend",
-  //     cwd: "./frontend",
-  //     command: "pnpm run dev",
-  //     prefixColor: "cyan",
-  //   },
+    {
+      name: "frontend",
+      cwd: "./smr-frontend",
+      command: "pnpm run dev",
+      prefixColor: "cyan",
+    },
   {
     name: "shared-lib",
     cwd: "./smr-shared-library",
