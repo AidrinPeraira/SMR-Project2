@@ -13,7 +13,7 @@ export enum AuthMessages {
 
   USER_ALREADY_EXISTS = "A user with given credentials already exists. Please login to continue.",
   USER_REGISTERED = "New User registerd. Verify Email to continue.",
-  USER_NOT_FOUND = "User not registered with this email. Signup to continue.",
+  USER_NOT_FOUND = "User not registered with given credentials.",
 
   INVALID_CREDENTIALS = "The email or password provided is incorrect.",
   LOGOUT_SUCCESS = "You have been successfully logged out.",
@@ -44,6 +44,12 @@ export enum DriverMessages {
   DRIVER_APPLICATION_PENDING = "A pending driver application already exists for this user.",
   DRIVER_ALREADY_EXISTS = "Driver already exists.",
   DRIVER_APPLICATION_SUCCESS = "Driver application submitted successfully.",
+
+  DRIVER_APPLICATION_NOT_FOUND = "Driver application not found.",
+
+  DRIVER_APPLICATION_REJECTED = "Driver application rejected successfully.",
+  DRIVER_APPLICATION_APPROVED = "Driver application approved successfully.",
+  
   DRIVER_NOT_FOUND = "Driver not found.",
   DRIVER_REGISTERED = "Driver registered successfully.",
   DRIVER_UPDATED = "Driver updated successfully.",

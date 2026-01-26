@@ -33,9 +33,10 @@ export class CreateDriverApplicationUseCase implements ICreateDriverApplicationU
   ): Promise<DriverApplicationResultDTO> {
     const existingApplication =
       await this._driverApplicationRepository.findByUserId(data.userId);
+
     if (
       existingApplication &&
-      existingApplication.status == DriverApplicationStatus.PENDING
+      existingApplication.status === DriverApplicationStatus.PENDING
     ) {
       throw new AppError(
         AppErrorCode.CONFLICT,
@@ -44,7 +45,11 @@ export class CreateDriverApplicationUseCase implements ICreateDriverApplicationU
       );
     }
 
-    if (existingApplication && existingApplication.isActive) {
+    if (
+      existingApplication &&
+      existingApplication.status === DriverApplicationStatus.APPROVED &&
+      existingApplication.isActive
+    ) {
       throw new AppError(
         AppErrorCode.CONFLICT,
         DriverMessages.DRIVER_ALREADY_EXISTS,
@@ -56,6 +61,18 @@ export class CreateDriverApplicationUseCase implements ICreateDriverApplicationU
       "driver_application_counter",
     );
     const applicationId = `DAP${String(nextSeq).padStart(5, "0")}`;
+
+    const now = new Date();
+
+    if (existingApplication && existingApplication.isActive) {
+      await this._driverApplicationRepository.update(
+        existingApplication.applicationId,
+        {
+          isActive: false,
+          updatedAt: now,
+        },
+      );
+    }
 
     let newApplication: DriverApplicationEntity = {
       applicationId: applicationId,
@@ -82,16 +99,16 @@ export class CreateDriverApplicationUseCase implements ICreateDriverApplicationU
       status: DriverApplicationStatus.PENDING,
       isActive: true,
 
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
 
-    newApplication =
+    const savedApplication =
       await this._driverApplicationRepository.save(newApplication);
 
     return {
-      applicationId: newApplication.applicationId,
-      userId: newApplication.userId,
+      applicationId: savedApplication.applicationId,
+      userId: savedApplication.userId,
     };
   }
 }

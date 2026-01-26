@@ -1,10 +1,11 @@
+import { DriverApplicationStatus } from "@smr/shared";
 
 export interface DriverApplicationRequestDTO {
   userId: string;
   email: string;
 
   licenseNumber: string;
-  licenseExpiry: string; 
+  licenseExpiry: string;
   licenseImage: string;
 
   vehicleType: string;
@@ -22,8 +23,13 @@ export interface DriverApplicationRequestDTO {
 }
 
 export interface DriverApplicationResultDTO {
-    applicationId: string,
-    userId: string;
+  applicationId: string;
+  userId: string;
 }
 
-
+export interface DriverApplicationActionDTO {
+  applicationId: string;
+  applicationStatus: DriverApplicationStatus;
+  comment: string;
+  adminId: string;
+}
