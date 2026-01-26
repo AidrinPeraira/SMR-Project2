@@ -23,6 +23,15 @@ export class NotificationProcessor implements INotificationProcessor {
         await this._emailService.sendOtpEmail(typedEvent.data);
         break;
 
+      //driver application status
+      case EventName.DRIVER_APPLICATION_APPROVED:
+      case EventName.DRIVER_APPLICATION_REJECTED:
+        const driverEvent = event as any;
+        await this._emailService.sendDriverApplicationStatusEmail(
+          driverEvent.data,
+        );
+        break;
+
       //unhandled events
       default:
         break;
