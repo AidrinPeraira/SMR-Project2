@@ -1,4 +1,4 @@
-import { AppConfig } from "@/application.config.js";
+import { AppConfig } from "@/application.config";
 import axios from "axios";
 
 export const ApiEndpoint = axios.create({

@@ -1,4 +1,4 @@
-import { ApiEndpoint } from "@/lib/axios.js";
+import { ApiEndpoint } from "@/lib/axios";
 import {
   ApiResponse,
   RegisterResponseDto,
