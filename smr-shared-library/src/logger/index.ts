@@ -1,2 +1,2 @@
-export * from "./winston";
-export * from "./http-logger.js";
+export { logger } from "./winston";
+export { httpLogger } from "./http-logger";

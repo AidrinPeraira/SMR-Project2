@@ -2,7 +2,7 @@ import { AppConfig } from "@/application.config.js";
 import { NotificationProcessor } from "@/application/NotificationProcessor.js";
 import { NodemailerEmailService } from "@/infrastructure/email/NodeMailerService.js";
 import { RabbitMQConsumer } from "@/infrastructure/rabbitmq/RabbitMQConsumer.js";
-import { logger } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 import express from "express";
 
 async function startServer() {

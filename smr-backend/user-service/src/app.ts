@@ -5,9 +5,7 @@ import {
   AppError,
   AppErrorCode,
   AppMessages,
-  httpLogger,
   HttpStatus,
-  logger,
   makeFailedResponse,
 } from "@smr/shared";
 import { createAuthRouter } from "@/presentation/routes/AuthRouter.js";
@@ -18,6 +16,7 @@ import { createAdminRouter } from "@/presentation/routes/AdminRoutes.js";
 import { adminController } from "@/presentation/factories/AdminControllerFactory.js";
 import { createProfileRouter } from "@/presentation/routes/ProfileRouter.js";
 import { profileController } from "@/presentation/factories/ProfileControllerFactory.js";
+import { httpLogger, logger } from "@smr/shared/logger";
 
 export function createApp() {
   dotenv.config({ override: false });

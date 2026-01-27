@@ -1,5 +1,6 @@
 import { IEventBus } from "@/application/interfaces/service/IEventBus.js";
-import { DomainEvent, logger } from "@smr/shared";
+import { DomainEvent } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 import amqp from "amqplib";
 
 type AmqpConnection = Awaited<ReturnType<typeof amqp.connect>>;

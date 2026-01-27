@@ -5,12 +5,8 @@ import {
   toDriverApplicationResponse,
 } from "@/presentation/mapper/DriverMapper.js";
 import { handleControllerError } from "@/presentation/utils/ErrorHandler.js";
-import {
-  DriverMessages,
-  HttpStatus,
-  logger,
-  makeSuccessResponse,
-} from "@smr/shared";
+import { DriverMessages, HttpStatus, makeSuccessResponse } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 import { Request, Response } from "express";
 
 export class DriverController implements IDriverController {

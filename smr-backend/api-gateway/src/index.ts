@@ -4,7 +4,7 @@ import express from "express";
 import cors from "cors";
 import proxy from "express-http-proxy";
 import dotenv from "dotenv";
-import { httpLogger, logger } from "@smr/shared";
+import { httpLogger, logger } from "@smr/shared/logger";
 import { AppConfig } from "@/application.config.js";
 
 dotenv.config();
