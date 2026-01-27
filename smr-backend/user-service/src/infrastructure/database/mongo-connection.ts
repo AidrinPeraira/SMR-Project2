@@ -1,5 +1,5 @@
 import { AppConfig } from "@/application.config.js";
-import { logger } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 import mongoose from "mongoose";
 
 export async function connectToDatabase(): Promise<void> {

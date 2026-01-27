@@ -1,6 +1,8 @@
 import { AppConfig } from "@/application.config.js";
 import { INotificationProcessor } from "@/application/interfaces/INotificationProcessor.js";
-import { DomainEvent, EventName, logger } from "@smr/shared";
+import { DomainEvent, EventName } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
+
 import amqp from "amqplib";
 
 export class RabbitMQConsumer {

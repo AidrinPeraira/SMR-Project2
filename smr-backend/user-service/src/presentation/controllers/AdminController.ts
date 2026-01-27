@@ -6,10 +6,10 @@ import {
   DriverApplicationStatus,
   DriverMessages,
   HttpStatus,
-  logger,
   makeSuccessResponse,
 } from "@smr/shared";
 import { Request, Response } from "express";
+import { logger } from "@smr/shared/logger";
 
 export class AdminController implements IAdminController {
   constructor(

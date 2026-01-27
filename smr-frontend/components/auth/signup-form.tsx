@@ -14,11 +14,24 @@ import { Input } from "@/components/ui/input";
 import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
+import { useActionState, useState } from "react";
+import { RegisterUserRequest, UserRoles } from "@smr/shared";
+import { registerAction } from "@/actions/auth/register-action";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const initalState = {
+    first_name: "",
+    last_name: "",
+    email_id: "",
+    phone_number: "",
+    user_role: UserRoles.PASSENGER,
+    password: "",
+    confirm_password: "",
+    email_verified: false,
+  };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">

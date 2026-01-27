@@ -2,7 +2,7 @@ import { createApp } from "@/app.js";
 import { AppConfig } from "@/application.config.js";
 import { connectToDatabase } from "@/infrastructure/database/mongo-connection.js";
 import { eventBus } from "@/presentation/factories/EventBusFactory.js";
-import { logger } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 
 async function startServer(): Promise<void> {
   const app = createApp();

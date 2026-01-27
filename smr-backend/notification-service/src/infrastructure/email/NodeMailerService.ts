@@ -4,12 +4,9 @@ import {
   getDriverApplicationStatusEmailContent,
   getEmailContent,
 } from "@/infrastructure/email/EmailTemplates.js";
-import {
-  DriverApplicationActionData,
-  logger,
-  SendEmailOTPData,
-} from "@smr/shared";
+import { DriverApplicationActionData, SendEmailOTPData } from "@smr/shared";
 import nodemailer from "nodemailer";
+import { logger } from "@smr/shared/logger";
 
 export class NodemailerEmailService implements IEmailService {
   private _transporter;

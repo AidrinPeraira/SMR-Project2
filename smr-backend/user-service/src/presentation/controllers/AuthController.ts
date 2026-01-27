@@ -25,7 +25,6 @@ import {
   AppMessages,
   AuthMessages,
   HttpStatus,
-  logger,
   LoginUserSchema,
   makeSuccessResponse,
   OTPType,
@@ -35,6 +34,7 @@ import {
   SendEmailOTPData,
   VerifyOtpSchema,
 } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 import { Request, Response } from "express";
 
 export class AuthController implements IAuthController {

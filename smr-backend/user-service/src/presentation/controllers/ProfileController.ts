@@ -6,10 +6,10 @@ import {
   AppErrorCode,
   AuthMessages,
   HttpStatus,
-  logger,
   makeSuccessResponse,
 } from "@smr/shared";
 import { Request, Response } from "express";
+import { logger } from "@smr/shared/logger";
 
 export class ProfileController implements IProfileController {
   constructor(private readonly _getProfileUseCase: IGetProfileUseCase) {}
