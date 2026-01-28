@@ -16,10 +16,10 @@ type FieldError = {
 };
 
 export type RegisterState = {
-  data: Omit<RegisterUserRequest, "email_verified" | "user_role">;
+  data: RegisterUserRequest;
   success: boolean;
   message: string;
-  eroors: FieldError[];
+  eroors: Omit<RegisterUserRequest, "email_verified" | "user_role">;
 };
 
 export async function registerAction(state: RegisterState, formData: FormData) {

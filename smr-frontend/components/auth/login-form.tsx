@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronLeft } from "@hugeicons/core-free-icons";
 
 export function LoginForm({
   className,
@@ -24,21 +26,11 @@ export function LoginForm({
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8">
-            <Button type="button" variant="ghost" size="icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              <span>Back</span>
+            <Button asChild type="button" variant="ghost" size="icon">
+              <Link href="/">
+                <HugeiconsIcon icon={ChevronLeft} />
+                <span>Back</span>
+              </Link>
             </Button>
 
             <FieldGroup>

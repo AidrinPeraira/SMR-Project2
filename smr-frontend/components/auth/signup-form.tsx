@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -15,47 +16,120 @@ import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
 import { registerAction, RegisterState } from "@/actions/auth/register-action";
-import { useActionState, useState } from "react";
+import { SyntheticEvent, useActionState, useState } from "react";
 import LoaderButton from "@/components/reusable/loader-button";
-import { RegisterUserSchema, safeParseOrThrow, UserRoles } from "@smr/shared";
+import {
+  AppError,
+  AppErrorCode,
+  RegisterUserSchema,
+  safeParseOrThrow,
+  UserRoles,
+} from "@smr/shared";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronLeft, Previous } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 
-export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  const [errors, setErrors] = useState({
-    first_name: "a",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-  });
-  const [data, setData] = useState({
+const initialState: RegisterState = {
+  data: {
     first_name: "",
     last_name: "",
     email_id: "",
     confirm_password: "",
     password: "",
     phone_number: "",
-  });
-  const [pending, isPending] = useState(false);
+    user_role: UserRoles.PASSENGER,
+    email_verified: false,
+  },
+  success: false,
+  message: "",
+  eroors: {
+    first_name: "",
+    last_name: "",
+    email_id: "",
+    confirm_password: "",
+    password: "",
+    phone_number: "",
+  },
+};
 
-  function handleRegisterSubmit(formData: FormData) {
+export function SignupForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  const [registerState, setRegisterState] =
+    useState<RegisterState>(initialState);
+  const [pending, setPending] = useState<boolean>(false);
+
+  async function handleRegisterSubmit(e: SyntheticEvent): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
     try {
-      const data = {
-        first_name: formData.get("first_name"),
-        last_name: formData.get("last_name"),
-        email_id: formData.get("email_id"),
-        confirm_password: formData.get("confirm_password"),
-        password: formData.get("password"),
-        phone_number: formData.get("phone_number"),
-        user_role: UserRoles.PASSENGER,
-        email_verified: false,
-      };
-      const validatedData = safeParseOrThrow(RegisterUserSchema, data);
+      setPending(true);
+      setRegisterState((prev) => {
+        return {
+          ...prev,
+          errors: {
+            first_name: "",
+            last_name: "",
+            email_id: "",
+            confirm_password: "",
+            password: "",
+            phone_number: "",
+          },
+        };
+      });
+      console.log("Data for regiter: ", registerState.data);
+      const validatedData = safeParseOrThrow(
+        RegisterUserSchema,
+        registerState.data,
+      );
+      console.log("Validated Data");
     } catch (error: unknown) {
-      console.log(error);
+      if (error instanceof AppError) {
+        console.log(
+          "Handle Register Submit App Error: ",
+          error.message,
+          error.details,
+        );
+
+        if (error.code == AppErrorCode.VALIDATION_FAILED) {
+          let issues = error.details;
+
+          for (let issue of issues) {
+            if (issue.field && issue.message) {
+              setRegisterState((prev) => {
+                return {
+                  ...prev,
+                  eroors: {
+                    ...prev.eroors,
+                    [issue.field]: issue.message,
+                  },
+                };
+              });
+            }
+          }
+
+          toast.error(error.message, {
+            description: "Please check the information you have entered.",
+          });
+        } else {
+          toast.error("Something went wrong!", {
+            description: error.message,
+          });
+        }
+      } else if (error instanceof Error) {
+        console.log("Handle Register Error: ", error.message);
+        toast.error("Something went wrong!", {
+          description: error.message || "Please try again later",
+        });
+      } else {
+        console.log("Handle Register Error: ", error);
+        toast.error("Something went wrong!", {
+          description: "Please try again later",
+        });
+      }
+    } finally {
+      setPending(false);
     }
   }
 
@@ -63,29 +137,23 @@ export function SignupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form action={handleRegisterSubmit} className="p-6 md:p-8" noValidate>
-            <Button type="button" variant="ghost" size="icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              <span>Back</span>
+          <form
+            onSubmit={(e) => handleRegisterSubmit(e)}
+            className="p-6 md:p-8"
+            noValidate
+          >
+            <Button asChild type="button" variant="ghost" size="icon">
+              <Link href={"/"}>
+                <HugeiconsIcon icon={ChevronLeft} />
+                <span>Back</span>
+              </Link>
             </Button>
 
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
                 <p className="text-muted-foreground text-sm text-balance">
-                  Enter your email below to create your account
+                  Enter your details below to create your account
                 </p>
               </div>
 
@@ -94,21 +162,43 @@ export function SignupForm({
                 <Field className="grid grid-cols-2 gap-4 relative">
                   <Field>
                     <FieldLabel htmlFor="first_name">First Name</FieldLabel>
-                    <Input id="first_name" type="text" name="first_name" />
-                    {errors.first_name && (
-                      <FieldDescription className="absolute left-0 bottom-0 text-destructive">
-                        {errors.first_name}
-                      </FieldDescription>
+                    <Input
+                      id="first_name"
+                      type="text"
+                      name="first_name"
+                      value={registerState.data.first_name}
+                      onChange={(e) => {
+                        setRegisterState((prev) => {
+                          return {
+                            ...prev,
+                            data: { ...prev.data, first_name: e.target.value },
+                          };
+                        });
+                      }}
+                    />
+                    {registerState.eroors.first_name && (
+                      <FieldError>{registerState.eroors.first_name}</FieldError>
                     )}
                   </Field>
 
                   <Field>
                     <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
-                    <Input id="last_name" type="text" name="last_name" />
-                    {errors.last_name && (
-                      <FieldDescription className=" text-destructive">
-                        {errors.last_name}
-                      </FieldDescription>
+                    <Input
+                      id="last_name"
+                      type="text"
+                      name="last_name"
+                      value={registerState.data.last_name}
+                      onChange={(e) => {
+                        setRegisterState((prev) => {
+                          return {
+                            ...prev,
+                            data: { ...prev.data, last_name: e.target.value },
+                          };
+                        });
+                      }}
+                    />
+                    {registerState.eroors.last_name && (
+                      <FieldError>{registerState.eroors.last_name}</FieldError>
                     )}
                   </Field>
                 </Field>
@@ -122,11 +212,18 @@ export function SignupForm({
                   type="email"
                   name="email_id"
                   placeholder="m@example.com"
+                  value={registerState.data.email_id}
+                  onChange={(e) => {
+                    setRegisterState((prev) => {
+                      return {
+                        ...prev,
+                        data: { ...prev.data, email_id: e.target.value },
+                      };
+                    });
+                  }}
                 />
-                {errors.email_id && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.email_id}
-                  </FieldDescription>
+                {registerState.eroors.email_id && (
+                  <FieldError>{registerState.eroors.email_id}</FieldError>
                 )}
               </Field>
 
@@ -138,11 +235,18 @@ export function SignupForm({
                   name="phone_number"
                   type="tel"
                   placeholder="9876543210"
+                  value={registerState.data.phone_number}
+                  onChange={(e) => {
+                    setRegisterState((prev) => {
+                      return {
+                        ...prev,
+                        data: { ...prev.data, phone_number: e.target.value },
+                      };
+                    });
+                  }}
                 />
-                {errors.phone_number && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.phone_number}
-                  </FieldDescription>
+                {registerState.eroors.phone_number && (
+                  <FieldError>{registerState.eroors.phone_number}</FieldError>
                 )}
               </Field>
 
@@ -151,7 +255,19 @@ export function SignupForm({
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input id="password" type="password" name="password" />
+                    <Input
+                      id="password"
+                      type="password"
+                      name="password"
+                      onChange={(e) => {
+                        setRegisterState((prev) => {
+                          return {
+                            ...prev,
+                            data: { ...prev.data, password: e.target.value },
+                          };
+                        });
+                      }}
+                    />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="confirm_password">
@@ -161,13 +277,52 @@ export function SignupForm({
                       id="confirm_password"
                       type="password"
                       name="confirm_password"
+                      onChange={(e) => {
+                        setRegisterState((prev) => {
+                          return {
+                            ...prev,
+                            data: {
+                              ...prev.data,
+                              confirm_password: e.target.value,
+                            },
+                          };
+                        });
+                      }}
+                      onBlur={() => {
+                        if (
+                          registerState.data.password !==
+                          registerState.data.confirm_password
+                        ) {
+                          setRegisterState((prev) => {
+                            return {
+                              ...prev,
+                              data: {
+                                ...prev.data,
+                                confirm_password: "Passwords do not match",
+                              },
+                            };
+                          });
+                        } else {
+                          setRegisterState((prev) => {
+                            return {
+                              ...prev,
+                              data: {
+                                ...prev.data,
+                                confirm_password: "",
+                              },
+                            };
+                          });
+                        }
+                      }}
                     />
                   </Field>
                 </Field>
-                {(errors.password || errors.confirm_password) && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.password || errors.confirm_password}
-                  </FieldDescription>
+                {(registerState.eroors.password ||
+                  registerState.eroors.confirm_password) && (
+                  <FieldError>
+                    {registerState.eroors.password ||
+                      registerState.eroors.confirm_password}
+                  </FieldError>
                 )}
               </Field>
 
