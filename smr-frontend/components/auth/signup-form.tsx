@@ -16,21 +16,15 @@ import { Input } from "@/components/ui/input";
 import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
-import { registerAction, RegisterState } from "@/actions/auth/register-action";
-import { SyntheticEvent, useActionState, useState } from "react";
 import LoaderButton from "@/components/reusable/loader-button";
 import {
-  AppError,
-  AppErrorCode,
   RegisterUserRequest,
   RegisterUserSchema,
-  safeParseOrThrow,
   UserRoles,
 } from "@smr/shared";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ChevronLeft, Previous } from "@hugeicons/core-free-icons";
-import { toast } from "sonner";
-import { Form, useForm } from "react-hook-form";
+import { Controller, Form, useForm } from "react-hook-form";
 import {
   FormControl,
   FormField,
@@ -38,8 +32,50 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { use, useState } from "react";
+import { toast } from "sonner";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 
-export function SignupForm() {
+export function SignupForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  const [pending, setPending] = useState<boolean>(false);
+
+  const [errors, setErrors] = useState({
+    first_name: "a",
+    last_name: "",
+    email_id: "",
+    confirm_password: "",
+    password: "",
+    phone_number: "",
+  });
+  const [data, setData] = useState({
+    first_name: "",
+    last_name: "",
+    email_id: "",
+    confirm_password: "",
+    password: "",
+    phone_number: "",
+  });
+
+  /**
+   * How does React Hook Form Work
+   *
+   * The useForm hook return somme methods.
+   * most of these methods work by returning some props based on the input given
+   * These porps injected into the component gives us controll
+   *
+   *  1. register("fieldName", {vlidation options as key value pairs})
+   *      : to control that input field. and track and validate the data using the hook
+   *  2. handleSubmit((data)=>{}) : this function is given in the onsubmit
+   *  3. formState : ??
+   */
   const registerForm = useForm<RegisterUserRequest>({
     resolver: zodResolver(RegisterUserSchema),
     defaultValues: {
@@ -54,76 +90,195 @@ export function SignupForm() {
     },
   });
 
-  function handleRegisterSubmit() {}
+  async function handleRegisterSubmit(data: RegisterUserRequest) {
+    try {
+      console.log("Register form data submitted: ", data);
+    } catch (error: unknown) {
+      console.log("Error handling register form: ", error);
+    }
+  }
+
   return (
-    <div className={cn("flex flex-col gap-6")}>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <Form {...registerForm}>
-            <form
-              onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
-              className="p-6 md:p-8"
-              noValidate
-            >
-              <Button asChild type="button" variant="ghost" size="icon">
-                <Link href={"/"}>
-                  <HugeiconsIcon icon={ChevronLeft} />
-                  <span>Back</span>
-                </Link>
-              </Button>
+          <form
+            id="register-form"
+            className="p-6 md:p-8"
+            onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
+          >
+            <Button type="button" variant="ghost" size="icon">
+              <Link href={"/"}>
+                <HugeiconsIcon icon={ChevronLeft} />
+                <span>Back</span>
+              </Link>
+            </Button>
 
-              <FieldGroup>
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <h1 className="text-2xl font-bold">Create your account</h1>
-                  <p className="text-muted-foreground text-sm text-balance">
-                    Enter your details below to create your account
-                  </p>
-                </div>
+            <FieldGroup>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <h1 className="text-2xl font-bold">Create your account</h1>
+                <p className="text-muted-foreground text-sm text-balance">
+                  Enter your details below to create your account
+                </p>
+              </div>
 
-                {/* Name */}
-                <FormField
-                  control={registerForm.control}
-                  name="first_name"
-                  render={({ field }) => (
-                    <FormItem className="grid grid-cols-2 gap-4 relative">
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                ></FormField>
+              {/* Name */}
+              <Field>
+                <Field className="grid grid-cols-2 gap-4 relative">
+                  {/* first name */}
+                  <Controller
+                    name="first_name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="first_name">
+                            First Name
+                          </FieldLabel>
+                          <Input {...field} />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
 
-                {/* Submit */}
-                <Field>
-                  <LoaderButton
-                    title="Create Account"
-                    isPending={false}
-                    type="submit"
+                  {/* last name */}
+                  <Controller
+                    name="last_name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
+                          <Input {...field} />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
                   />
                 </Field>
+              </Field>
 
-                <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                  <span className="bg-card">Or continue with</span>
-                </FieldSeparator>
+              {/* Email */}
+              <Field>
+                <Controller
+                  name="email_id"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="email_id">Email ID</FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
+              </Field>
 
-                {/* Social placeholder */}
-                <Field className="flex justify-center">
-                  <Button variant="outline" disabled>
-                    Google
-                  </Button>
+              {/* Phone */}
+              <Field>
+                <Controller
+                  name="phone_number"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="phone_number">
+                          Phone Number
+                        </FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
+              </Field>
+
+              {/* Password */}
+              <Field>
+                <Field className="grid grid-cols-2 gap-4">
+                  {/* password */}
+                  <Controller
+                    name="password"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="password">Password</FieldLabel>
+                          <Input {...field} type="password" />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+
+                  {/* confirm password */}
+                  <Field>
+                    <Controller
+                      name="confirm_password"
+                      control={registerForm.control}
+                      render={({ field, fieldState }) => {
+                        return (
+                          <Field>
+                            <FieldLabel htmlFor="confirm_password">
+                              Confirm Password
+                            </FieldLabel>
+                            <Input {...field} type="password" />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        );
+                      }}
+                    />
+                  </Field>
                 </Field>
+                {(errors.password || errors.confirm_password) && (
+                  <FieldDescription className=" text-destructive">
+                    {errors.password || errors.confirm_password}
+                  </FieldDescription>
+                )}
+              </Field>
 
-                <FieldDescription className="text-center">
-                  Already have an account?{" "}
-                  <Link href="/login" replace>
-                    Log in
-                  </Link>
-                </FieldDescription>
-              </FieldGroup>
-            </form>
-          </Form>
+              {/* Submit */}
+              <Field>
+                <LoaderButton
+                  title="Create Account"
+                  isPending={pending}
+                  type="submit"
+                />
+              </Field>
+
+              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                <span className="bg-card">Or continue with</span>
+              </FieldSeparator>
+
+              {/* Social placeholder */}
+              <Field className="flex justify-center">
+                <Button variant="outline" disabled>
+                  Google
+                </Button>
+              </Field>
+
+              <FieldDescription className="text-center">
+                Already have an account?{" "}
+                <Link href="/login" replace>
+                  Log in
+                </Link>
+              </FieldDescription>
+            </FieldGroup>
+          </form>
 
           <div className="bg-muted relative hidden md:block">
             <Image
