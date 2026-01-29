@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Field,
   FieldDescription,
@@ -15,121 +16,85 @@ import { Input } from "@/components/ui/input";
 import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
-import { registerAction, RegisterState } from "@/actions/auth/register-action";
-import { SyntheticEvent, useActionState, useState } from "react";
 import LoaderButton from "@/components/reusable/loader-button";
 import {
-  AppError,
-  AppErrorCode,
+  RegisterUserRequest,
   RegisterUserSchema,
-  safeParseOrThrow,
   UserRoles,
 } from "@smr/shared";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ChevronLeft, Previous } from "@hugeicons/core-free-icons";
+import { Controller, Form, useForm } from "react-hook-form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { use, useState } from "react";
 import { toast } from "sonner";
-
-const initialState: RegisterState = {
-  data: {
-    first_name: "",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-    user_role: UserRoles.PASSENGER,
-    email_verified: false,
-  },
-  success: false,
-  message: "",
-  eroors: {
-    first_name: "",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-  },
-};
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [registerState, setRegisterState] =
-    useState<RegisterState>(initialState);
   const [pending, setPending] = useState<boolean>(false);
 
-  async function handleRegisterSubmit(e: SyntheticEvent): Promise<void> {
-    e.preventDefault();
-    e.stopPropagation();
+  const [errors, setErrors] = useState({
+    first_name: "a",
+    last_name: "",
+    email_id: "",
+    confirm_password: "",
+    password: "",
+    phone_number: "",
+  });
+  const [data, setData] = useState({
+    first_name: "",
+    last_name: "",
+    email_id: "",
+    confirm_password: "",
+    password: "",
+    phone_number: "",
+  });
+
+  /**
+   * How does React Hook Form Work
+   *
+   * The useForm hook return somme methods.
+   * most of these methods work by returning some props based on the input given
+   * These porps injected into the component gives us controll
+   *
+   *  1. register("fieldName", {vlidation options as key value pairs})
+   *      : to control that input field. and track and validate the data using the hook
+   *  2. handleSubmit((data)=>{}) : this function is given in the onsubmit
+   *  3. formState : ??
+   */
+  const registerForm = useForm<RegisterUserRequest>({
+    resolver: zodResolver(RegisterUserSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email_id: "",
+      phone_number: "",
+      password: "",
+      confirm_password: "",
+      user_role: UserRoles.PASSENGER,
+      email_verified: false,
+    },
+  });
+
+  async function handleRegisterSubmit(data: RegisterUserRequest) {
     try {
-      setPending(true);
-      setRegisterState((prev) => {
-        return {
-          ...prev,
-          errors: {
-            first_name: "",
-            last_name: "",
-            email_id: "",
-            confirm_password: "",
-            password: "",
-            phone_number: "",
-          },
-        };
-      });
-      console.log("Data for regiter: ", registerState.data);
-      const validatedData = safeParseOrThrow(
-        RegisterUserSchema,
-        registerState.data,
-      );
-      console.log("Validated Data");
+      console.log("Register form data submitted: ", data);
     } catch (error: unknown) {
-      if (error instanceof AppError) {
-        console.log(
-          "Handle Register Submit App Error: ",
-          error.message,
-          error.details,
-        );
-
-        if (error.code == AppErrorCode.VALIDATION_FAILED) {
-          let issues = error.details;
-
-          for (let issue of issues) {
-            if (issue.field && issue.message) {
-              setRegisterState((prev) => {
-                return {
-                  ...prev,
-                  eroors: {
-                    ...prev.eroors,
-                    [issue.field]: issue.message,
-                  },
-                };
-              });
-            }
-          }
-
-          toast.error(error.message, {
-            description: "Please check the information you have entered.",
-          });
-        } else {
-          toast.error("Something went wrong!", {
-            description: error.message,
-          });
-        }
-      } else if (error instanceof Error) {
-        console.log("Handle Register Error: ", error.message);
-        toast.error("Something went wrong!", {
-          description: error.message || "Please try again later",
-        });
-      } else {
-        console.log("Handle Register Error: ", error);
-        toast.error("Something went wrong!", {
-          description: "Please try again later",
-        });
-      }
-    } finally {
-      setPending(false);
+      console.log("Error handling register form: ", error);
     }
   }
 
@@ -138,11 +103,11 @@ export function SignupForm({
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form
-            onSubmit={(e) => handleRegisterSubmit(e)}
+            id="register-form"
             className="p-6 md:p-8"
-            noValidate
+            onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
           >
-            <Button asChild type="button" variant="ghost" size="icon">
+            <Button type="button" variant="ghost" size="icon">
               <Link href={"/"}>
                 <HugeiconsIcon icon={ChevronLeft} />
                 <span>Back</span>
@@ -160,169 +125,129 @@ export function SignupForm({
               {/* Name */}
               <Field>
                 <Field className="grid grid-cols-2 gap-4 relative">
-                  <Field>
-                    <FieldLabel htmlFor="first_name">First Name</FieldLabel>
-                    <Input
-                      id="first_name"
-                      type="text"
-                      name="first_name"
-                      value={registerState.data.first_name}
-                      onChange={(e) => {
-                        setRegisterState((prev) => {
-                          return {
-                            ...prev,
-                            data: { ...prev.data, first_name: e.target.value },
-                          };
-                        });
-                      }}
-                    />
-                    {registerState.eroors.first_name && (
-                      <FieldError>{registerState.eroors.first_name}</FieldError>
-                    )}
-                  </Field>
+                  {/* first name */}
+                  <Controller
+                    name="first_name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="first_name">
+                            First Name
+                          </FieldLabel>
+                          <Input {...field} />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
 
-                  <Field>
-                    <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
-                    <Input
-                      id="last_name"
-                      type="text"
-                      name="last_name"
-                      value={registerState.data.last_name}
-                      onChange={(e) => {
-                        setRegisterState((prev) => {
-                          return {
-                            ...prev,
-                            data: { ...prev.data, last_name: e.target.value },
-                          };
-                        });
-                      }}
-                    />
-                    {registerState.eroors.last_name && (
-                      <FieldError>{registerState.eroors.last_name}</FieldError>
-                    )}
-                  </Field>
+                  {/* last name */}
+                  <Controller
+                    name="last_name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
+                          <Input {...field} />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
                 </Field>
               </Field>
 
               {/* Email */}
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
+                <Controller
                   name="email_id"
-                  placeholder="m@example.com"
-                  value={registerState.data.email_id}
-                  onChange={(e) => {
-                    setRegisterState((prev) => {
-                      return {
-                        ...prev,
-                        data: { ...prev.data, email_id: e.target.value },
-                      };
-                    });
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="email_id">Email ID</FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
                   }}
                 />
-                {registerState.eroors.email_id && (
-                  <FieldError>{registerState.eroors.email_id}</FieldError>
-                )}
               </Field>
 
               {/* Phone */}
               <Field>
-                <FieldLabel htmlFor="phone_number">Phone Number</FieldLabel>
-                <Input
-                  id="phone_number"
+                <Controller
                   name="phone_number"
-                  type="tel"
-                  placeholder="9876543210"
-                  value={registerState.data.phone_number}
-                  onChange={(e) => {
-                    setRegisterState((prev) => {
-                      return {
-                        ...prev,
-                        data: { ...prev.data, phone_number: e.target.value },
-                      };
-                    });
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="phone_number">
+                          Phone Number
+                        </FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
                   }}
                 />
-                {registerState.eroors.phone_number && (
-                  <FieldError>{registerState.eroors.phone_number}</FieldError>
-                )}
               </Field>
 
               {/* Password */}
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
+                  {/* password */}
+                  <Controller
+                    name="password"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="password">Password</FieldLabel>
+                          <Input {...field} type="password" />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+
+                  {/* confirm password */}
                   <Field>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input
-                      id="password"
-                      type="password"
-                      name="password"
-                      onChange={(e) => {
-                        setRegisterState((prev) => {
-                          return {
-                            ...prev,
-                            data: { ...prev.data, password: e.target.value },
-                          };
-                        });
-                      }}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm_password">
-                      Confirm Password
-                    </FieldLabel>
-                    <Input
-                      id="confirm_password"
-                      type="password"
+                    <Controller
                       name="confirm_password"
-                      onChange={(e) => {
-                        setRegisterState((prev) => {
-                          return {
-                            ...prev,
-                            data: {
-                              ...prev.data,
-                              confirm_password: e.target.value,
-                            },
-                          };
-                        });
-                      }}
-                      onBlur={() => {
-                        if (
-                          registerState.data.password !==
-                          registerState.data.confirm_password
-                        ) {
-                          setRegisterState((prev) => {
-                            return {
-                              ...prev,
-                              data: {
-                                ...prev.data,
-                                confirm_password: "Passwords do not match",
-                              },
-                            };
-                          });
-                        } else {
-                          setRegisterState((prev) => {
-                            return {
-                              ...prev,
-                              data: {
-                                ...prev.data,
-                                confirm_password: "",
-                              },
-                            };
-                          });
-                        }
+                      control={registerForm.control}
+                      render={({ field, fieldState }) => {
+                        return (
+                          <Field>
+                            <FieldLabel htmlFor="confirm_password">
+                              Confirm Password
+                            </FieldLabel>
+                            <Input {...field} type="password" />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        );
                       }}
                     />
                   </Field>
                 </Field>
-                {(registerState.eroors.password ||
-                  registerState.eroors.confirm_password) && (
-                  <FieldError>
-                    {registerState.eroors.password ||
-                      registerState.eroors.confirm_password}
-                  </FieldError>
+                {(errors.password || errors.confirm_password) && (
+                  <FieldDescription className=" text-destructive">
+                    {errors.password || errors.confirm_password}
+                  </FieldDescription>
                 )}
               </Field>
 

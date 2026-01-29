@@ -7,7 +7,7 @@ export const RegisterUserBaseSchema = z.object({
     .trim()
     .min(2, { message: "First name must be at least 2 characters long" })
     .regex(/^[a-zA-Z\s]+$/, {
-      message: "First name is of invalid format.",
+      message: "First name can only contain letters and spaces",
     }),
 
   last_name: z
@@ -15,15 +15,15 @@ export const RegisterUserBaseSchema = z.object({
     .trim()
     .min(2, { message: "Last name must be at least 2 characters long" })
     .regex(/^[a-zA-Z\s]+$/, {
-      message: "Last name is of invalid format.",
+      message: "Last name can only contain letters and spaces",
     }),
 
   email_id: z
     .string({ required_error: "Email is required" })
     .trim()
     .toLowerCase()
-    .min(5, { message: "Email has to be at least 5 characters long." })
-    .max(255, { message: "Email cannot exceed 255 characters" })
+    .min(5, { message: "Email is too short" })
+    .max(255, { message: "Email is too long" })
     .regex(
       /^(?!\.)(?!.*\.\.)([A-Z0-9_+-\.]{3,})[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i,
       { message: "Email is of invalid format." },
@@ -32,10 +32,8 @@ export const RegisterUserBaseSchema = z.object({
   phone_number: z
     .string({ required_error: "Phone number is required" })
     .trim()
-    .min(10, {
-      message: "Phone number has to be 10 digits, witout prefixes (+91).",
-    })
-    .regex(/^[6-9]\d{9}$/, { message: "Invalid phone number format." }),
+    .min(10, { message: "Phone number must be at least 10 digits" })
+    .regex(/^[6-9]\d{9}$/, { message: "Invalid phone number format" }),
 
   user_role: z.nativeEnum(UserRoles, {
     errorMap: () => ({ message: "Please select a valid user role" }),
@@ -45,12 +43,10 @@ export const RegisterUserBaseSchema = z.object({
     .string({ required_error: "Password is required" })
     .trim()
     .min(8, { message: "Password must be at least 8 characters long" })
-    .regex(/[A-Z]/, {
-      message: "Password must contain at least one uppercase letter",
-    })
-    .regex(/[0-9]/, { message: "Password must contain at least one number" })
+    .regex(/[A-Z]/, { message: "Password must include an uppercase letter" })
+    .regex(/[0-9]/, { message: "Password must include a number" })
     .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/, {
-      message: "Password must contain at least one special character",
+      message: "Password must include a special character",
     })
     .regex(/^[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]+$/, {
       message: "Password contains invalid characters",
@@ -62,7 +58,6 @@ export const RegisterUserBaseSchema = z.object({
 
   email_verified: z.boolean({
     required_error: "Email verification status is required",
-    invalid_type_error: "Email verification status must be a boolean",
   }),
 });
 
