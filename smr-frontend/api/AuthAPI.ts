@@ -1,4 +1,5 @@
 import { ApiEndpoint } from "@/lib/axios";
+import { GoogelInput } from "@/types/AuthTypes";
 import {
   ApiResponse,
   LoginResponseDTO,
@@ -32,4 +33,17 @@ export async function postLoginRequest(
   data: LoginUserRequest,
 ): Promise<AxiosResponse<ApiResponse<LoginResponseDTO>>> {
   return ApiEndpoint.post("/user-service/auth/login", data);
+}
+
+/**
+ * This function takes data and makes request to the backend
+ * to handle user google login.
+ *
+ * @param data data recieved after client side google validation
+ * @returns response from the server
+ */
+export async function postGoogleAuthRequest(
+  data: GoogelInput,
+): Promise<AxiosResponse<ApiResponse<LoginResponseDTO>>> {
+  return ApiEndpoint.post("/user-service/auth/google-auth", data);
 }

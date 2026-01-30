@@ -4,6 +4,8 @@ import { Figtree } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AppConfig } from "@/application.config";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -20,16 +22,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={figtree.variable}>
       <body className="">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <ThemeToggle />
-          <Toaster />
-        </ThemeProvider>
+        <GoogleOAuthProvider clientId={String(AppConfig.auth.googleClientId)}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <ThemeToggle />
+            <Toaster />
+          </ThemeProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

@@ -27,7 +27,8 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
 import useUserStore from "@/store/user-store";
 import { useRouter } from "next/navigation";
-import { handleAxiosError } from "@/lib/axios-error-handler";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleAuthAction } from "@/actions/auth/google-action";
 
 export function LoginForm({
   className,
@@ -51,6 +52,48 @@ export function LoginForm({
       console.log("Login Data: ", data);
 
       const result = await loginAction(data);
+
+      if (result.success) {
+        toast.success("Login Successful", { description: result.message });
+        setAccessToken(result.data.access_token);
+        setUser(result.data.user);
+
+        if (result.data.user.user_role === UserRoles.PASSENGER) {
+          router.push("/passenger");
+        } else if (result.data.user.user_role === UserRoles.DRIVER) {
+          router.push("/driver");
+        }
+
+        return result.data;
+      } else {
+        toast.error("User Login Error!", {
+          description: result.message || "Failed to login",
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("User Login Error!", {
+          description: error?.message,
+        });
+      } else {
+        toast.error("User Login Error!", {
+          description: "Failed to login",
+        });
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onGoogleSuccess(credentialResponse: any) {
+    try {
+      const token = credentialResponse.credential;
+      if (!token) {
+        return toast.error("Google login failed.");
+      }
+
+      toast("Signing in with Google...");
+      const result = await googleAuthAction(token);
 
       if (result.success) {
         toast.success("Login Successful", { description: result.message });
@@ -148,7 +191,7 @@ export function LoginForm({
               {/* Submit */}
               <Field>
                 <LoaderButton
-                  title="Create Account"
+                  title="Log In"
                   isPending={pending}
                   type="submit"
                 />
@@ -160,9 +203,13 @@ export function LoginForm({
 
               {/* Social placeholder */}
               <Field className="flex justify-center">
-                <Button variant="outline" disabled>
-                  Google
-                </Button>
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={onGoogleSuccess}
+                    onError={() => toast.error("Google login failed.")}
+                    useOneTap
+                  />
+                </div>
               </Field>
 
               <FieldDescription className="text-center">
