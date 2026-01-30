@@ -27,14 +27,28 @@ import { ChevronLeft } from "@hugeicons/core-free-icons";
 import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
 import { toast } from "sonner";
-import { postRegisterRequest } from "@/api/AuthAPI";
 import { registerAction } from "@/actions/auth/register-action";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { OTPForm } from "@/components/reusable/email-otp-verify-form";
+import { OTPType } from "@smr/shared";
+
+import { verifyOTPAndRegisterAction } from "@/actions/otp/verify-otp-register-action";
+import { useAuthStore } from "@/store/auth-store";
+import useUserStore from "@/store/user-store";
+import { useRouter } from "next/navigation";
+import { handleAxiosError } from "@/lib/axios-error-handler";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { setAccessToken } = useAuthStore();
+  const { setUser } = useUserStore();
+  const router = useRouter();
+
   const [pending, setPending] = useState<boolean>(false);
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string>("");
 
   /**
    * How does React Hook Form Work
@@ -67,6 +81,7 @@ export function SignupForm({
 
     const result = await registerAction(data);
     console.log(result);
+
     if (!result.success) {
       console.log("Error handling register form: ", result.message);
       toast.error("User Signup Error!", {
@@ -76,9 +91,40 @@ export function SignupForm({
       return;
     }
 
-    console.log("Success");
+    setRegisteredEmail(data.email_id);
+    setShowOtpModal(true);
     setPending(false);
   }
+
+  const handleVerifyOtp = async (otp: string) => {
+    try {
+      const result = await verifyOTPAndRegisterAction({
+        email_id: registeredEmail,
+        otp_number: otp,
+        otp_type: OTPType.REGISTER,
+      });
+
+      if (result.success) {
+        toast.success("Verification successful");
+        setAccessToken(result.data.access_token);
+        setUser(result.data.user);
+
+        if (result.data.user.user_role === UserRoles.PASSENGER) {
+          router.push("/passenger");
+        } else if (result.data.user.user_role === UserRoles.DRIVER) {
+          router.push("/driver");
+        }
+
+        return result.data;
+      }
+    } catch (error: unknown) {
+      const handledError = handleAxiosError(error);
+      console.log("Verify Register OTP Action Error: ", handledError);
+      toast.error("User Signup Error!", {
+        description: handledError.message || "Failed to verify OTP",
+      });
+    }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -271,6 +317,24 @@ export function SignupForm({
         By clicking continue, you agree to our <a>Terms of Service</a> and{" "}
         <a>Privacy Policy</a>.
       </FieldDescription>
+
+      {/* Dialog to show otp form */}
+      <Dialog open={showOtpModal} onOpenChange={setShowOtpModal}>
+        <DialogTitle>Verify Your Email</DialogTitle>
+        <DialogContent
+          className="sm:max-w-md p-0 overflow-hidden"
+          showCloseButton={false}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <OTPForm
+            email={registeredEmail}
+            otp_type={OTPType.REGISTER}
+            onVerify={handleVerifyOtp}
+            onSuccess={() => {}}
+            className="border-0 shadow-none w-full"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

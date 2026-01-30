@@ -5,18 +5,15 @@ import { handleAxiosError } from "@/lib/axios-error-handler";
 import { ActionResponse } from "@/types/ResponseTypes";
 import { RegisterResponseDto, RegisterUserRequest } from "@smr/shared";
 
-type FieldError = {
-  field: string;
-  message: string;
-};
-
-export type RegisterState = {
-  data: RegisterUserRequest;
-  success: boolean;
-  message: string;
-  eroors: Omit<RegisterUserRequest, "email_verified" | "user_role">;
-};
-
+/**
+ * This function takes data and makes request to the backend
+ * to handle user registration.
+ *
+ * The backend endpoint handles sending the email otp for verification automaticaly
+ *
+ * @param data data entered by the user during registration
+ * @returns response from the server with user data
+ */
 export async function registerAction(
   data: RegisterUserRequest,
 ): Promise<ActionResponse<RegisterResponseDto>> {
