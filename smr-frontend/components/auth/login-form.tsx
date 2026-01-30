@@ -177,7 +177,17 @@ export function LoginForm({
                   render={({ field, fieldState }) => {
                     return (
                       <Field>
-                        <FieldLabel htmlFor="password">Password</FieldLabel>
+                        <div className="flex items-center">
+                          <FieldLabel htmlFor="password">Password</FieldLabel>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="ml-auto text-sm underline-offset-2 hover:underline"
+                            onClick={(e) => {}}
+                          >
+                            Forgot password?
+                          </Button>
+                        </div>
                         <Input {...field} type="password" />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
