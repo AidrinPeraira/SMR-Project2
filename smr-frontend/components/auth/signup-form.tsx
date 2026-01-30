@@ -80,7 +80,6 @@ export function SignupForm({
     setPending(true);
 
     const result = await registerAction(data);
-    console.log(result);
 
     if (!result.success) {
       console.log("Error handling register form: ", result.message);
@@ -116,13 +115,21 @@ export function SignupForm({
         }
 
         return result.data;
+      } else {
+        toast.error("User Signup Error!", {
+          description: result.message,
+        });
       }
     } catch (error: unknown) {
-      const handledError = handleAxiosError(error);
-      console.log("Verify Register OTP Action Error: ", handledError);
-      toast.error("User Signup Error!", {
-        description: handledError.message || "Failed to verify OTP",
-      });
+      if (error instanceof Error) {
+        toast.error("User Signup Error!", {
+          description: error?.message,
+        });
+      } else {
+        toast.error("User Signup Error!", {
+          description: "Failed to signup",
+        });
+      }
     }
   };
 
