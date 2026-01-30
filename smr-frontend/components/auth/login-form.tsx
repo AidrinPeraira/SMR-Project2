@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -14,31 +15,131 @@ import { Input } from "@/components/ui/input";
 import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronLeft } from "@hugeicons/core-free-icons";
+import { LoginUserRequest, LoginUserSchema, UserRoles } from "@smr/shared";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import LoaderButton from "@/components/reusable/loader-button";
+import { useState } from "react";
+import { loginAction } from "@/actions/auth/login-action";
+import { toast } from "sonner";
+import { useAuthStore } from "@/store/auth-store";
+import useUserStore from "@/store/user-store";
+import { useRouter } from "next/navigation";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleAuthAction } from "@/actions/auth/google-action";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [pending, setPending] = useState<boolean>(false);
+  const { setAccessToken } = useAuthStore();
+  const { setUser } = useUserStore();
+  const router = useRouter();
+
+  const loginForm = useForm<LoginUserRequest>({
+    resolver: zodResolver(LoginUserSchema),
+    defaultValues: {
+      email_id: "",
+      password: "",
+    },
+  });
+
+  async function handleLoginSubmit(data: LoginUserRequest) {
+    try {
+      console.log("Login Data: ", data);
+
+      const result = await loginAction(data);
+
+      if (result.success) {
+        toast.success("Login Successful", { description: result.message });
+        setAccessToken(result.data.access_token);
+        setUser(result.data.user);
+
+        if (result.data.user.user_role === UserRoles.PASSENGER) {
+          router.push("/passenger");
+        } else if (result.data.user.user_role === UserRoles.DRIVER) {
+          router.push("/driver");
+        }
+
+        return result.data;
+      } else {
+        toast.error("User Login Error!", {
+          description: result.message || "Failed to login",
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("User Login Error!", {
+          description: error?.message,
+        });
+      } else {
+        toast.error("User Login Error!", {
+          description: "Failed to login",
+        });
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onGoogleSuccess(credentialResponse: any) {
+    try {
+      const token = credentialResponse.credential;
+      if (!token) {
+        return toast.error("Google login failed.");
+      }
+
+      toast("Signing in with Google...");
+      const result = await googleAuthAction(token);
+
+      if (result.success) {
+        toast.success("Login Successful", { description: result.message });
+        setAccessToken(result.data.access_token);
+        setUser(result.data.user);
+
+        if (result.data.user.user_role === UserRoles.PASSENGER) {
+          router.push("/passenger");
+        } else if (result.data.user.user_role === UserRoles.DRIVER) {
+          router.push("/driver");
+        }
+
+        return result.data;
+      } else {
+        toast.error("User Login Error!", {
+          description: result.message || "Failed to login",
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("User Login Error!", {
+          description: error?.message,
+        });
+      } else {
+        toast.error("User Login Error!", {
+          description: "Failed to login",
+        });
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
-            <Button type="button" variant="ghost" size="icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              <span>Back</span>
+          <form
+            className="p-6 md:p-8"
+            onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
+          >
+            <Button asChild type="button" variant="ghost" size="icon">
+              <Link href="/">
+                <HugeiconsIcon icon={ChevronLeft} />
+                <span>Back</span>
+              </Link>
             </Button>
 
             <FieldGroup>
@@ -51,28 +152,59 @@ export function LoginForm({
 
               {/* Email */}
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input id="email" type="email" />
+                <Controller
+                  name="email_id"
+                  control={loginForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="email_id">Email ID</FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
               </Field>
 
               {/* Password */}
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Button
-                    variant="link"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                    type="button"
-                  >
-                    Forgot password?
-                  </Button>
-                </div>
-                <Input id="password" type="password" />
+                <Controller
+                  name="password"
+                  control={loginForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <div className="flex items-center">
+                          <FieldLabel htmlFor="password">Password</FieldLabel>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="ml-auto text-sm underline-offset-2 hover:underline"
+                            onClick={(e) => {}}
+                          >
+                            Forgot password?
+                          </Button>
+                        </div>
+                        <Input {...field} type="password" />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
               </Field>
 
               {/* Submit */}
               <Field>
-                <Button type="button">Login</Button>
+                <LoaderButton
+                  title="Log In"
+                  isPending={pending}
+                  type="submit"
+                />
               </Field>
 
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
@@ -81,9 +213,13 @@ export function LoginForm({
 
               {/* Social placeholder */}
               <Field className="flex justify-center">
-                <Button variant="outline" disabled>
-                  Google
-                </Button>
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={onGoogleSuccess}
+                    onError={() => toast.error("Google login failed.")}
+                    useOneTap
+                  />
+                </div>
               </Field>
 
               <FieldDescription className="text-center">
@@ -106,8 +242,8 @@ export function LoginForm({
       </Card>
 
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <a>Terms of Service</a> and{" "}
+        <a>Privacy Policy</a>.
       </FieldDescription>
     </div>
   );

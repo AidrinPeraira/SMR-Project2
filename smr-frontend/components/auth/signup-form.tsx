@@ -3,9 +3,11 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -14,48 +16,164 @@ import { Input } from "@/components/ui/input";
 import { ImageAssets } from "@/assets";
 import Image from "next/image";
 import Link from "next/link";
-import { registerAction, RegisterState } from "@/actions/auth/register-action";
-import { useActionState, useState } from "react";
 import LoaderButton from "@/components/reusable/loader-button";
-import { RegisterUserSchema, safeParseOrThrow, UserRoles } from "@smr/shared";
+import {
+  RegisterUserRequest,
+  RegisterUserSchema,
+  UserRoles,
+} from "@smr/shared";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronLeft } from "@hugeicons/core-free-icons";
+import { Controller, useForm } from "react-hook-form";
+import { useState } from "react";
+import { toast } from "sonner";
+import { registerAction } from "@/actions/auth/register-action";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { OTPForm } from "@/components/reusable/email-otp-verify-form";
+import { OTPType } from "@smr/shared";
+
+import { verifyOTPAndRegisterAction } from "@/actions/otp/verify-otp-register-action";
+import { useAuthStore } from "@/store/auth-store";
+import useUserStore from "@/store/user-store";
+import { useRouter } from "next/navigation";
+import { handleAxiosError } from "@/lib/axios-error-handler";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleAuthAction } from "@/actions/auth/google-action";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [errors, setErrors] = useState({
-    first_name: "a",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-  });
-  const [data, setData] = useState({
-    first_name: "",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-  });
-  const [pending, isPending] = useState(false);
+  const { setAccessToken } = useAuthStore();
+  const { setUser } = useUserStore();
+  const router = useRouter();
 
-  function handleRegisterSubmit(formData: FormData) {
+  const [pending, setPending] = useState<boolean>(false);
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string>("");
+
+  /**
+   * How does React Hook Form Work
+   *
+   * The useForm hook return somme methods.
+   * most of these methods work by returning some props based on the input given
+   * These porps injected into the component gives us controll
+   *
+   *  1. register("fieldName", {vlidation options as key value pairs})
+   *      : to control that input field. and track and validate the data using the hook
+   *  2. handleSubmit((data)=>{}) : this function is given in the onsubmit
+   *  3. formState : ??
+   */
+  const registerForm = useForm<RegisterUserRequest>({
+    resolver: zodResolver(RegisterUserSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email_id: "",
+      phone_number: "",
+      password: "",
+      confirm_password: "",
+      user_role: UserRoles.PASSENGER,
+      email_verified: false,
+    },
+  });
+
+  async function handleRegisterSubmit(data: RegisterUserRequest) {
+    setPending(true);
+
+    const result = await registerAction(data);
+
+    if (!result.success) {
+      console.log("Error handling register form: ", result.message);
+      toast.error("User Signup Error!", {
+        description: result.message,
+      });
+      setPending(false);
+      return;
+    }
+
+    setRegisteredEmail(data.email_id);
+    setShowOtpModal(true);
+    setPending(false);
+  }
+
+  const handleVerifyOtp = async (otp: string) => {
     try {
-      const data = {
-        first_name: formData.get("first_name"),
-        last_name: formData.get("last_name"),
-        email_id: formData.get("email_id"),
-        confirm_password: formData.get("confirm_password"),
-        password: formData.get("password"),
-        phone_number: formData.get("phone_number"),
-        user_role: UserRoles.PASSENGER,
-        email_verified: false,
-      };
-      const validatedData = safeParseOrThrow(RegisterUserSchema, data);
+      const result = await verifyOTPAndRegisterAction({
+        email_id: registeredEmail,
+        otp_number: otp,
+        otp_type: OTPType.REGISTER,
+      });
+
+      if (result.success) {
+        toast.success("Verification successful");
+        setAccessToken(result.data.access_token);
+        setUser(result.data.user);
+
+        if (result.data.user.user_role === UserRoles.PASSENGER) {
+          router.push("/passenger");
+        } else if (result.data.user.user_role === UserRoles.DRIVER) {
+          router.push("/driver");
+        }
+
+        return result.data;
+      } else {
+        toast.error("User Signup Error!", {
+          description: result.message,
+        });
+      }
     } catch (error: unknown) {
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error("User Signup Error!", {
+          description: error?.message,
+        });
+      } else {
+        toast.error("User Signup Error!", {
+          description: "Failed to signup",
+        });
+      }
+    }
+  };
+
+  async function onGoogleSuccess(credentialResponse: any) {
+    try {
+      const token = credentialResponse.credential;
+      if (!token) {
+        return toast.error("Google login failed.");
+      }
+
+      toast("Signing in with Google...");
+      const result = await googleAuthAction(token);
+
+      if (result.success) {
+        toast.success("Login Successful", { description: result.message });
+        setAccessToken(result.data.access_token);
+        setUser(result.data.user);
+
+        if (result.data.user.user_role === UserRoles.PASSENGER) {
+          router.push("/passenger");
+        } else if (result.data.user.user_role === UserRoles.DRIVER) {
+          router.push("/driver");
+        }
+
+        return result.data;
+      } else {
+        toast.error("User Login Error!", {
+          description: result.message || "Failed to login",
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("User Login Error!", {
+          description: error?.message,
+        });
+      } else {
+        toast.error("User Login Error!", {
+          description: "Failed to login",
+        });
+      }
+    } finally {
+      setPending(false);
     }
   }
 
@@ -63,112 +181,148 @@ export function SignupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form action={handleRegisterSubmit} className="p-6 md:p-8" noValidate>
+          <form
+            id="register-form"
+            className="p-6 md:p-8"
+            onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
+          >
             <Button type="button" variant="ghost" size="icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              <span>Back</span>
+              <Link href={"/"}>
+                <HugeiconsIcon icon={ChevronLeft} />
+                <span>Back</span>
+              </Link>
             </Button>
 
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
                 <p className="text-muted-foreground text-sm text-balance">
-                  Enter your email below to create your account
+                  Enter your details below to create your account
                 </p>
               </div>
 
               {/* Name */}
               <Field>
                 <Field className="grid grid-cols-2 gap-4 relative">
-                  <Field>
-                    <FieldLabel htmlFor="first_name">First Name</FieldLabel>
-                    <Input id="first_name" type="text" name="first_name" />
-                    {errors.first_name && (
-                      <FieldDescription className="absolute left-0 bottom-0 text-destructive">
-                        {errors.first_name}
-                      </FieldDescription>
-                    )}
-                  </Field>
+                  {/* first name */}
+                  <Controller
+                    name="first_name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="first_name">
+                            First Name
+                          </FieldLabel>
+                          <Input {...field} />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
 
-                  <Field>
-                    <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
-                    <Input id="last_name" type="text" name="last_name" />
-                    {errors.last_name && (
-                      <FieldDescription className=" text-destructive">
-                        {errors.last_name}
-                      </FieldDescription>
-                    )}
-                  </Field>
+                  {/* last name */}
+                  <Controller
+                    name="last_name"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
+                          <Input {...field} />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
                 </Field>
               </Field>
 
               {/* Email */}
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
+                <Controller
                   name="email_id"
-                  placeholder="m@example.com"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="email_id">Email ID</FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
+                  }}
                 />
-                {errors.email_id && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.email_id}
-                  </FieldDescription>
-                )}
               </Field>
 
               {/* Phone */}
               <Field>
-                <FieldLabel htmlFor="phone_number">Phone Number</FieldLabel>
-                <Input
-                  id="phone_number"
+                <Controller
                   name="phone_number"
-                  type="tel"
-                  placeholder="9876543210"
+                  control={registerForm.control}
+                  render={({ field, fieldState }) => {
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor="phone_number">
+                          Phone Number
+                        </FieldLabel>
+                        <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    );
+                  }}
                 />
-                {errors.phone_number && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.phone_number}
-                  </FieldDescription>
-                )}
               </Field>
 
               {/* Password */}
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
+                  {/* password */}
+                  <Controller
+                    name="password"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => {
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor="password">Password</FieldLabel>
+                          <Input {...field} type="password" />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+
+                  {/* confirm password */}
                   <Field>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input id="password" type="password" name="password" />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm_password">
-                      Confirm Password
-                    </FieldLabel>
-                    <Input
-                      id="confirm_password"
-                      type="password"
+                    <Controller
                       name="confirm_password"
+                      control={registerForm.control}
+                      render={({ field, fieldState }) => {
+                        return (
+                          <Field>
+                            <FieldLabel htmlFor="confirm_password">
+                              Confirm Password
+                            </FieldLabel>
+                            <Input {...field} type="password" />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        );
+                      }}
                     />
                   </Field>
                 </Field>
-                {(errors.password || errors.confirm_password) && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.password || errors.confirm_password}
-                  </FieldDescription>
-                )}
               </Field>
 
               {/* Submit */}
@@ -186,9 +340,13 @@ export function SignupForm({
 
               {/* Social placeholder */}
               <Field className="flex justify-center">
-                <Button variant="outline" disabled>
-                  Google
-                </Button>
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={onGoogleSuccess}
+                    onError={() => toast.error("Google login failed.")}
+                    useOneTap
+                  />
+                </div>
               </Field>
 
               <FieldDescription className="text-center">
@@ -214,6 +372,24 @@ export function SignupForm({
         By clicking continue, you agree to our <a>Terms of Service</a> and{" "}
         <a>Privacy Policy</a>.
       </FieldDescription>
+
+      {/* Dialog to show otp form */}
+      <Dialog open={showOtpModal} onOpenChange={setShowOtpModal}>
+        <DialogTitle>Verify Your Email</DialogTitle>
+        <DialogContent
+          className="sm:max-w-md p-0 overflow-hidden"
+          showCloseButton={false}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <OTPForm
+            email={registeredEmail}
+            otp_type={OTPType.REGISTER}
+            onVerify={handleVerifyOtp}
+            onSuccess={() => {}}
+            className="border-0 shadow-none w-full"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
