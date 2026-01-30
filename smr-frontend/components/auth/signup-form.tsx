@@ -23,46 +23,18 @@ import {
   UserRoles,
 } from "@smr/shared";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ChevronLeft, Previous } from "@hugeicons/core-free-icons";
-import { Controller, Form, useForm } from "react-hook-form";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { use, useState } from "react";
+import { ChevronLeft } from "@hugeicons/core-free-icons";
+import { Controller, useForm } from "react-hook-form";
+import { useState } from "react";
 import { toast } from "sonner";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  InputGroupTextarea,
-} from "@/components/ui/input-group";
+import { postRegisterRequest } from "@/api/AuthAPI";
+import { registerAction } from "@/actions/auth/register-action";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [pending, setPending] = useState<boolean>(false);
-
-  const [errors, setErrors] = useState({
-    first_name: "a",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-  });
-  const [data, setData] = useState({
-    first_name: "",
-    last_name: "",
-    email_id: "",
-    confirm_password: "",
-    password: "",
-    phone_number: "",
-  });
 
   /**
    * How does React Hook Form Work
@@ -91,11 +63,21 @@ export function SignupForm({
   });
 
   async function handleRegisterSubmit(data: RegisterUserRequest) {
-    try {
-      console.log("Register form data submitted: ", data);
-    } catch (error: unknown) {
-      console.log("Error handling register form: ", error);
+    setPending(true);
+
+    const result = await registerAction(data);
+    console.log(result);
+    if (!result.success) {
+      console.log("Error handling register form: ", result.message);
+      toast.error("User Signup Error!", {
+        description: result.message,
+      });
+      setPending(false);
+      return;
     }
+
+    console.log("Success");
+    setPending(false);
   }
 
   return (
@@ -244,11 +226,6 @@ export function SignupForm({
                     />
                   </Field>
                 </Field>
-                {(errors.password || errors.confirm_password) && (
-                  <FieldDescription className=" text-destructive">
-                    {errors.password || errors.confirm_password}
-                  </FieldDescription>
-                )}
               </Field>
 
               {/* Submit */}

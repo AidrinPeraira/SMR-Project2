@@ -3,10 +3,10 @@ import {
   AppError,
   AppMessages,
   HttpStatus,
-  logger,
   makeFailedResponse,
   AppErrorCode,
 } from "@smr/shared";
+import { logger } from "@smr/shared/logger";
 
 /**
  * This is a reusable function that is used to handle errors in the

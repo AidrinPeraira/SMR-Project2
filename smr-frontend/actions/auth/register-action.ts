@@ -1,14 +1,9 @@
 "use server";
 
 import { postRegisterRequest } from "@/api/AuthAPI";
-import {
-  AppError,
-  RegisterUserRequest,
-  RegisterUserSchema,
-  safeParseOrThrow,
-  UserRoles,
-} from "@smr/shared";
-import { errorToJSON } from "next/dist/server/render";
+import { handleAxiosError } from "@/lib/axios-error-handler";
+import { ActionResponse } from "@/types/ResponseTypes";
+import { RegisterResponseDto, RegisterUserRequest } from "@smr/shared";
 
 type FieldError = {
   field: string;
@@ -22,33 +17,28 @@ export type RegisterState = {
   eroors: Omit<RegisterUserRequest, "email_verified" | "user_role">;
 };
 
-export async function registerAction(state: RegisterState, formData: FormData) {
+export async function registerAction(
+  data: RegisterUserRequest,
+): Promise<ActionResponse<RegisterResponseDto>> {
   try {
-    const data = {
-      first_name: formData.get("first_name"),
-      last_name: formData.get("last_name"),
-      email_id: formData.get("email_id"),
-      phone_number: formData.get("phone_number"),
-      password: formData.get("password"),
-      confirm_password: formData.get("confirm_password"),
-      user_role: UserRoles.PASSENGER,
-      email_verified: false,
-    };
+    const response = await postRegisterRequest(data);
 
-    const verifiedData = safeParseOrThrow(RegisterUserSchema, data);
-    console.log("Register Payload: ", verifiedData);
-    // const response = postRegisterRequest(verifiedData);
+    if (response.data.success) {
+      return {
+        success: true,
+        message: response.data.message,
+        data: response.data.payload!,
+      };
+    }
+
     return {
-      ...state,
-      success: true,
-      message: "Validated",
+      success: false,
+      message: response.data.message,
+      error: (response.data as any).error,
     };
   } catch (error: unknown) {
-    console.log("Register Action Error: ", error);
-    return {
-      ...state,
-      success: false,
-      message: "Validation failed",
-    };
+    const handledError = handleAxiosError(error);
+    console.log("Register Action Error: ", handledError);
+    return handledError;
   }
 }

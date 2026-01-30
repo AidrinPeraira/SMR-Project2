@@ -59,6 +59,8 @@ export const RegisterUserBaseSchema = z.object({
   email_verified: z.boolean({
     required_error: "Email verification status is required",
   }),
+
+  profile_image: z.string().url().optional(),
 });
 
 export const RegisterUserSchema = RegisterUserBaseSchema.refine(
